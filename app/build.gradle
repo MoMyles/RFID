@@ -4,7 +4,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId 'com.example.SP_UHFDemo_install'
+        applicationId 'com.pugongying.uhf'
         minSdkVersion 14
         targetSdkVersion 19
     }

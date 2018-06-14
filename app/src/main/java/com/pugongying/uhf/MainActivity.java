@@ -29,6 +29,7 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
 import com.uhf.uhf.UHF1.UHF001;
 import com.uhf.uhf.UHF1Function.AndroidWakeLock;
@@ -66,13 +67,9 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public static final String SCN_CUST_ACTION_START = "android.intent.action.SCANNER_BUTTON_DOWN";
     public static final String SCN_CUST_ACTION_CANCEL = "android.intent.action.SCANNER_BUTTON_UP";
 
-    TextView tv_state, tv_tags, textView_time;
-    Button button_read, button_stop, button_clean, button_set;
+    private TextView tv_state, tv_tags, textView_time, tv_back, tv_complete;
+    private Button button_read, button_stop, button_clean, button_set;
     private ListView listView;
-    //    private ProgressDialog dialog = null;
-//    private myAsyncTast tast;
-//    TabHost tabHost;
-//    TabWidget tw;
 
 
     List<Byte> LB = new ArrayList();
@@ -152,30 +149,11 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        tast = new myAsyncTast();//创建AsyncTask
-//        tast.execute();//启动AsyncTask
 
         super.onCreate(savedInstanceState);
+        QMUIStatusBarHelper.translucent(this, 0x0090ff);
+
         setContentView(R.layout.activity_main);
-
-//        tabHost = (TabHost) findViewById(android.R.id.tabhost);
-//        tabHost.setup();
-//        TabSpec tp = tabHost.newTabSpec("tab1").setIndicator("盘点")
-//                .setContent(R.id.tab2);
-//
-//        tabHost.addTab(tp);
-//        tabHost.addTab(tabHost
-//                .newTabSpec("tab2")
-//                .setIndicator("读写锁")
-//                .setContent(new Intent(this, Sub3TabActivity.class)));
-//
-//        tabHost.addTab(tabHost
-//                .newTabSpec("tab3")
-//                .setIndicator("设置")
-//                .setContent(new Intent(this, Sub4TabActivity.class)));
-
-//        Comm.supoinTabHost = tabHost;
-//        tw = Comm.supoinTabHost.getTabWidget();
 
         button_read = (Button) findViewById(R.id.button_start);
         button_stop = (Button) findViewById(R.id.button_stop);
@@ -184,12 +162,26 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         button_set = (Button) findViewById(R.id.button_set);
         listView = (ListView) findViewById(R.id.listView_epclist);
 
+        tv_back = findViewById(R.id.tv_back);
+        tv_complete = findViewById(R.id.tv_complete);
+        tv_back.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        tv_complete.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO 把识别结果对相应表单进行更新操作
+            }
+        });
+
         tv_state = (TextView) findViewById(R.id.textView_invstate);
         tv_tags = (TextView) findViewById(R.id.textView_readallcnt);
         textView_time = (TextView) findViewById(R.id.textView_time);
         textView_time.setText("00:00:00");
 
-//        button_set.setText("实时");
         button_set.setFocusable(false);
         tv_state.setText("模块初始化失败");
         Awl = new AndroidWakeLock((PowerManager) getSystemService(Context.POWER_SERVICE));
@@ -197,7 +189,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             @SuppressWarnings("unused")
             @Override
             public void onClick(View arg0) {
-                // TODO Auto-generated method stub
                 try {
                     startTimerTask();
                     button_clean.performClick();
@@ -216,7 +207,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         button_stop.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                // TODO Auto-generated method stub
                 Awl.ReleaseWakeLock();
                 stopTimerTask();
                 tv_state.setText("停止读取");
@@ -229,7 +219,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         button_clean.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                // TODO Auto-generated method stub
                 tv_tags.setText("0");
                 tv_state.setText("清空完成,等待操作...");
                 Comm.clean();
@@ -251,33 +240,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 return false;
             }
         });
-
-//        button_set.setOnClickListener(new OnClickListener() {
-//            @Override
-//            public void onClick(View arg0) {
-//                // TODO Auto-generated method stub
-//                if (Comm.setParameters()) {
-//                    if (isQuick) {//是否快速模式 true为是 false为否
-//                        isQuick = false;
-//                        button_set.setText("实时");
-//                        Toast.makeText(MainActivity.this, "RealTime mode set success!", Toast.LENGTH_SHORT)
-//                                .show();
-//                    } else {
-//                        isQuick = true;
-//                        button_set.setText("快速");
-//                        Toast.makeText(MainActivity.this, "Quick mode set success!", Toast.LENGTH_SHORT)
-//                                .show();
-//                    }
-//                } else
-//                    Toast.makeText(MainActivity.this, "set false!", Toast.LENGTH_SHORT)
-//                            .show();
-//            }
-//        });
         this.listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
                                     long arg3) {
-                // TODO Auto-generated method stub
                 arg1.setBackgroundColor(Color.YELLOW);
 
                 @SuppressWarnings("unchecked")
@@ -345,7 +311,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 task = new TimerTask() {
                     @Override
                     public void run() {
-                        // TODO Auto-generated method stub
                         if (null == msg) {
                             msg = new Message();
                         } else {
@@ -552,7 +517,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //            Log.d("UHF","getScanCode "+scanCode);
             return super.dispatchKeyEvent(e);
         } catch (Exception ex) {
-            // TODO: handle exception
             ex.printStackTrace();
             return false;
         }

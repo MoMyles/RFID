@@ -68,7 +68,6 @@ JNIEXPORT jobject JNICALL Java_com_uhf_uhf_serialport_SerialPort_open
         {
                 speed = getBaudrate(baudrate);
                 if (speed == -1) {
-                        /* TODO: throw an exception */
                         LOGE("Invalid baudrate");
                         return NULL;
                 }
@@ -86,7 +85,6 @@ JNIEXPORT jobject JNICALL Java_com_uhf_uhf_serialport_SerialPort_open
                 {
                         /* Throw an exception */
                         LOGE("Cannot open port");
-                        /* TODO: throw an exception */
                         return NULL;
                 }
         }
@@ -99,7 +97,6 @@ JNIEXPORT jobject JNICALL Java_com_uhf_uhf_serialport_SerialPort_open
                 {
                         LOGE("tcgetattr() failed");
                         close(fd);
-                        /* TODO: throw an exception */
                         return NULL;
                 }
 
@@ -111,7 +108,6 @@ JNIEXPORT jobject JNICALL Java_com_uhf_uhf_serialport_SerialPort_open
                 {
                         LOGE("tcsetattr() failed");
                         close(fd);
-                        /* TODO: throw an exception */
                         return NULL;
                 }
         }

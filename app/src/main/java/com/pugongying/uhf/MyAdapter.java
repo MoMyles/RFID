@@ -13,7 +13,6 @@ public class MyAdapter extends SimpleAdapter{
 	public MyAdapter(Context context, List<? extends Map<String, ?>> data,
 			int resource, String[] from, int[] to) {
 		super(context, data, resource, from, to);
-		// TODO Auto-generated constructor stub
 		cr=Color.WHITE;
 	}
     public void setColor(int color)
@@ -23,8 +22,7 @@ public class MyAdapter extends SimpleAdapter{
     private int cr;
 	@Override      
 	public View getView(final int position, View convertView, ViewGroup parent)
-	{           
-		// TODO Auto-generated method stub 
+	{
 		// listview每次得到一个item，都要view去绘制，通过getView方法得到view           
 		// position为item的序号           
 		View view = null;           
