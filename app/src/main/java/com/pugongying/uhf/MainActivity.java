@@ -5,8 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
@@ -14,18 +12,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,12 +59,11 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public static final String SCN_CUST_ACTION_START = "android.intent.action.SCANNER_BUTTON_DOWN";
     public static final String SCN_CUST_ACTION_CANCEL = "android.intent.action.SCANNER_BUTTON_UP";
 
-    private TextView tv_state, tv_tags, textView_time, tv_back, tv_complete;
-    private Button button_read, button_stop, button_clean, button_set;
-    private ListView listView;
+    private TextView tv_tags, tv_back, tv_complete;
+    private Button btn_scan;
 
+    private boolean isScaning = false;
 
-    List<Byte> LB = new ArrayList();
     int scanCode = 0;
     private Timer timer = null;
     private TimerTask task = null;
@@ -92,7 +83,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-
         release();
     }
 
@@ -105,19 +95,12 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 tagListSize = lsTagList.size();
                 Bundle bd = msg.getData();
 
-                int readCount = bd.getInt("readCount");
-                if (readCount > 0)
-                    tv_state.setText(String.valueOf(readCount));
-
                 if (tagListSize > 0) {
-
                     showlist();
                 }
-                Log.e("uhfhandler", "readCount : " + String.valueOf(readCount));
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.e("uhfhandler", e.getMessage().toString());
             }
         }
     };
@@ -135,10 +118,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
                 Bundle bd = msg.getData();
                 strMsg = bd.get("Msg").toString();
-                if (!TextUtils.isEmpty(strMsg)) {
-                    tv_state.setText(strMsg);
-                } else
-                    tv_state.setText("模块初始化失败");
+//                if (!TextUtils.isEmpty(strMsg)) {
+//                    tv_state.setText(strMsg);
+//                } else
+//                    tv_state.setText("模块初始化失败");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -151,17 +134,18 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
         QMUIStatusBarHelper.translucent(this);
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_detail);
 
-        button_read = (Button) findViewById(R.id.button_start);
-        button_stop = (Button) findViewById(R.id.button_stop);
-        button_stop.setEnabled(false);
-        button_clean = (Button) findViewById(R.id.button_readclear);
-        button_set = (Button) findViewById(R.id.button_set);
-        listView = (ListView) findViewById(R.id.listView_epclist);
-
+//        button_read = (Button) findViewById(R.id.button_start);
+//        button_stop = (Button) findViewById(R.id.button_stop);
+//        button_stop.setEnabled(false);
+//        button_clean = (Button) findViewById(R.id.button_readclear);
+//        button_set = (Button) findViewById(R.id.button_set);
+//        listView = (ListView) findViewById(R.id.listView_epclist);
+        btn_scan = findViewById(R.id.btn_scan);
         tv_back = findViewById(R.id.tv_back);
         tv_complete = findViewById(R.id.tv_complete);
         tv_back.setOnClickListener(new OnClickListener() {
@@ -177,98 +161,112 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             }
         });
 
-        tv_state = (TextView) findViewById(R.id.textView_invstate);
+//        tv_state = (TextView) findViewById(R.id.textView_invstate);
         tv_tags = (TextView) findViewById(R.id.textView_readallcnt);
-        textView_time = (TextView) findViewById(R.id.textView_time);
-        textView_time.setText("00:00:00");
+//        textView_time = (TextView) findViewById(R.id.textView_time);
+//        textView_time.setText("00:00:00");
 
-        button_set.setFocusable(false);
-        tv_state.setText("模块初始化失败");
+//        button_set.setFocusable(false);
+//        tv_state.setText("模块初始化失败");
         Awl = new AndroidWakeLock((PowerManager) getSystemService(Context.POWER_SERVICE));
-        button_read.setOnClickListener(new OnClickListener() {
+        btn_scan.setOnClickListener(new OnClickListener() {
             @SuppressWarnings("unused")
             @Override
             public void onClick(View arg0) {
-                try {
-                    startTimerTask();
-                    button_clean.performClick();
-                    tv_state.setText("开始读取...");
-                    Awl.WakeLock();
-                    Comm.startScan();
-                    ReadHandleUI();
-                } catch (Exception ex) {
-                    Toast.makeText(MainActivity.this,
-                            "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
-                            .show();
+                if (!isScaning) {
+                    // 开启扫描
+                    try {
+//                        startTimerTask();
+//                        button_clean.performClick();
+//                        tv_state.setText("开始读取...");
+                        Awl.WakeLock();
+                        Comm.startScan();
+                        isScaning = true;
+                        btn_scan.setText("电子标签关闭");
+//                        ReadHandleUI();
+                    } catch (Exception ex) {
+                        Toast.makeText(MainActivity.this,
+                                "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                } else {
+                    // 扫描中 则关闭
+                    Awl.ReleaseWakeLock();
+                    Comm.stopScan();
+                    showlist();
+
+                    isScaning = false;
+                    btn_scan.setText("电子标签开启");
+//                    StopHandleUI();
                 }
             }
         });
 
-        button_stop.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                Awl.ReleaseWakeLock();
-                stopTimerTask();
-                tv_state.setText("停止读取");
-                Comm.stopScan();
-                showlist();
-                StopHandleUI();
-            }
-        });
+//        button_stop.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View arg0) {
+//                Awl.ReleaseWakeLock();
+////                stopTimerTask();
+////                tv_state.setText("停止读取");
+//                Comm.stopScan();
+//                showlist();
+//                StopHandleUI();
+//            }
+//        });
 
-        button_clean.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                tv_tags.setText("0");
-                tv_state.setText("清空完成,等待操作...");
-                Comm.clean();
-                showlist();
-            }
-        });
+//        button_clean.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View arg0) {
+//                tv_tags.setText("0");
+//                tv_state.setText("清空完成,等待操作...");
+//                Comm.clean();
+//                showlist();
+//            }
+//        });
 
         // Register receiver
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
-        button_set.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    onTouchButton();
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    onReleaseButton();
-                }
-                return false;
-            }
-        });
-        this.listView.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-                                    long arg3) {
-                arg1.setBackgroundColor(Color.YELLOW);
-
-                @SuppressWarnings("unchecked")
-                HashMap<String, String> hm = (HashMap<String, String>) listView
-                        .getItemAtPosition(arg2);
-                String epc = hm.get("EPC ID");
-                myapp.Curepc = epc;
-
-                for (int i = 0; i < listView.getCount(); i++) {
-                    if (i != arg2) {
-                        View v = listView.getChildAt(i);
-                        if (v != null) {
-                            ColorDrawable cd = (ColorDrawable) v
-                                    .getBackground();
-                            if (Color.YELLOW == cd.getColor()) {
-                                int[] colors = {Color.WHITE,
-                                        Color.rgb(219, 238, 244)};// RGB颜色
-                                v.setBackgroundColor(colors[i % 2]);// 每隔item之间颜色不同
-                            }
-                        }
-                    }
-                }
-            }
-
-        });
+//        button_set.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//                    onTouchButton();
+//                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+//                    onReleaseButton();
+//                }
+//                return false;
+//            }
+//        });
+//        this.listView.setOnItemClickListener(new OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+//                                    long arg3) {
+//                arg1.setBackgroundColor(Color.YELLOW);
+//
+//                @SuppressWarnings("unchecked")
+//                HashMap<String, String> hm = (HashMap<String, String>) listView
+//                        .getItemAtPosition(arg2);
+//                String epc = hm.get("EPC ID");
+//                myapp.Curepc = epc;
+//
+//                for (int i = 0; i < listView.getCount(); i++) {
+//                    if (i != arg2) {
+//                        View v = listView.getChildAt(i);
+//                        if (v != null) {
+//                            ColorDrawable cd = (ColorDrawable) v
+//                                    .getBackground();
+//                            if (Color.YELLOW == cd.getColor()) {
+//                                int[] colors = {Color.WHITE,
+//                                        Color.rgb(219, 238, 244)};// RGB颜色
+//                                v.setBackgroundColor(colors[i % 2]);// 每隔item之间颜色不同
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//        });
 //        tw.getChildAt(0).setBackgroundColor(Color.parseColor("#FF8C00"));
     }
 
@@ -305,71 +303,71 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     }
 
     //开始计时
-    public void startTimerTask() {
-        if (null == timer) {
-            if (null == task) {
-                task = new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (null == msg) {
-                            msg = new Message();
-                        } else {
-                            msg = Message.obtain();
-                        }
-                        msg.what = 1;
-                        handlerTimerTask.sendMessage(msg);
-                    }
-                };
-            }
-            timer = new Timer(true);
-            timer.schedule(task, mlTimerUnit, mlTimerUnit); // set timer duration
-        }
-    }
+//    public void startTimerTask() {
+//        if (null == timer) {
+//            if (null == task) {
+//                task = new TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        if (null == msg) {
+//                            msg = new Message();
+//                        } else {
+//                            msg = Message.obtain();
+//                        }
+//                        msg.what = 1;
+//                        handlerTimerTask.sendMessage(msg);
+//                    }
+//                };
+//            }
+//            timer = new Timer(true);
+//            timer.schedule(task, mlTimerUnit, mlTimerUnit); // set timer duration
+//        }
+//    }
 
     //停止计时
-    public void stopTimerTask() {
-        if (null != timer) {
-            task.cancel();
-            task = null;
-            timer.cancel(); // Cancel timer
-            timer.purge();
-            timer = null;
-            handlerTimerTask.removeMessages(msg.what);
-        }
-        mlCount = 0;
-    }
+//    public void stopTimerTask() {
+//        if (null != timer) {
+//            task.cancel();
+//            task = null;
+//            timer.cancel(); // Cancel timer
+//            timer.purge();
+//            timer = null;
+//            handlerTimerTask.removeMessages(msg.what);
+//        }
+//        mlCount = 0;
+//    }
 
     //异步处理计时数据
-    @SuppressLint("HandlerLeak")
-    public Handler handlerTimerTask = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case 1:
-                    mlCount++;
-                    totalSec = 0;
-                    // 100 millisecond
-                    totalSec = (int) (mlCount / 100);
-                    yushu = (int) (mlCount % 100);
-                    // Set time display
-                    min = (totalSec / 60);
-                    sec = (totalSec % 60);
-                    try {
-                        // 100 millisecond
-                        textView_time.setText(String.format("%1$02d:%2$02d:%3$d", min, sec, yushu));
-                    } catch (Exception e) {
-                        textView_time.setText("" + min + ":" + sec + ":" + yushu);
-                        e.printStackTrace();
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-            super.handleMessage(msg);
-        }
-
-    };
+//    @SuppressLint("HandlerLeak")
+//    public Handler handlerTimerTask = new Handler() {
+//        @Override
+//        public void handleMessage(Message msg) {
+//            switch (msg.what) {
+//                case 1:
+//                    mlCount++;
+//                    totalSec = 0;
+//                    // 100 millisecond
+//                    totalSec = (int) (mlCount / 100);
+//                    yushu = (int) (mlCount % 100);
+//                    // Set time display
+//                    min = (totalSec / 60);
+//                    sec = (totalSec % 60);
+//                    try {
+//                        // 100 millisecond
+//                        textView_time.setText(String.format("%1$02d:%2$02d:%3$d", min, sec, yushu));
+//                    } catch (Exception e) {
+//                        textView_time.setText("" + min + ":" + sec + ":" + yushu);
+//                        e.printStackTrace();
+//                    }
+//                    break;
+//
+//                default:
+//                    break;
+//            }
+//            super.handleMessage(msg);
+//        }
+//
+//    };
 
 
     public void InitDevice() {
@@ -408,29 +406,29 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             if (tagListSize > 0)
                 tv_tags.setText(String.valueOf(tagListSize));
             if (isQuick && !Comm.isrun)
-                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
+//                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
 
-            if (!isQuick || !Comm.isrun) {
-                while (tagListSize > 0) {
-                    if (index < 100) {
-                        epcstr = lsTagList.get(ListIndex).strEPC.replace(" ", "");
+                if (!isQuick || !Comm.isrun) {
+                    while (tagListSize > 0) {
+                        if (index < 100) {
+                            epcstr = lsTagList.get(ListIndex).strEPC.replace(" ", "");
 //                        if (epcstr.length() > 4) {
-                        Map<String, String> m = new HashMap<String, String>();
-                        m.put(Coname[0], String.valueOf(index));
-                        m.put(Coname[1], epcstr);
-                        ReadCnt = lsTagList.get(ListIndex).nReadCount;
-                        m.put(Coname[2], "1");
-                        //int mRSSI=Integer.parseInt(lsTagList.get(ListIndex).strRSSI);
-                        index++;
-                        list.add(m);
+                            Map<String, String> m = new HashMap<String, String>();
+                            m.put(Coname[0], String.valueOf(index));
+                            m.put(Coname[1], epcstr);
+                            ReadCnt = lsTagList.get(ListIndex).nReadCount;
+                            m.put(Coname[2], "1");
+                            //int mRSSI=Integer.parseInt(lsTagList.get(ListIndex).strRSSI);
+                            index++;
+                            list.add(m);
 
 //                        }
+                        }
+                        ListIndex++;
+                        tagListSize--;
                     }
-                    ListIndex++;
-                    tagListSize--;
-                }
 
-            }
+                }
             if (!isQuick || !Comm.isrun) {
                 ListAdapter adapter = new MyAdapter(this, list,
                         R.layout.listitemview_inv, Coname, new int[]{
@@ -440,35 +438,35 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 // layout为listView的布局文件，包括三个TextView，用来显示三个列名所对应的值
                 // ColumnNames为数据库的表的列名
                 // 最后一个参数是int[]类型的，为view类型的id，用来显示ColumnNames列名所对应的值。view的类型为TextView
-                listView.setAdapter(adapter);
+//                listView.setAdapter(adapter);
 
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        if (!isrun)
-            tv_state.setText(String.valueOf("等待操作..."));
+//        if (!isrun)
+//            tv_state.setText(String.valueOf("等待操作..."));
     }
 
-    private void ReadHandleUI() {
-        this.button_read.setEnabled(false);
-        this.button_stop.setEnabled(true);
+//    private void ReadHandleUI() {
+//        this.button_read.setEnabled(false);
+//        this.button_stop.setEnabled(true);
 //        this.button_set.setEnabled(false);
-        this.button_clean.setEnabled(false);
-        TabWidget tw = Comm.supoinTabHost.getTabWidget();
+//        this.button_clean.setEnabled(false);
+//        TabWidget tw = Comm.supoinTabHost.getTabWidget();
 //        tw.getChildAt(1).setEnabled(false);
 //        tw.getChildAt(2).setEnabled(false);
-    }
+//    }
 
-    private void StopHandleUI() {
-        button_read.setEnabled(true);
-        button_stop.setEnabled(false);
+//    private void StopHandleUI() {
+//        button_read.setEnabled(true);
+//        button_stop.setEnabled(false);
 //        this.button_set.setEnabled(true);
-        this.button_clean.setEnabled(true);
-        TabWidget tw = Comm.supoinTabHost.getTabWidget();
+//        this.button_clean.setEnabled(true);
+//        TabWidget tw = Comm.supoinTabHost.getTabWidget();
 //        tw.getChildAt(1).setEnabled(true);
 //        tw.getChildAt(2).setEnabled(true);
-    }
+//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -504,9 +502,9 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     /* 释放按键事件 */
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (scanCode == 261 && isrun)
-            button_stop.performClick();
+            btn_scan.performClick();
         else if (scanCode == 261 && !isrun)
-            button_read.performClick();
+            btn_scan.performClick();
         return super.onKeyUp(keyCode, event);
     }
 
