@@ -1,0 +1,98 @@
+package com.pugongying.uhf;
+
+import android.os.AsyncTask;
+import android.text.TextUtils;
+import android.util.Log;
+
+import org.ksoap2.SoapEnvelope;
+import org.ksoap2.serialization.PropertyInfo;
+import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapSerializationEnvelope;
+import org.ksoap2.transport.HttpTransportSE;
+
+import java.util.Map;
+import java.util.Set;
+
+public class NetUtil {
+    private static final String NET_ADDRESS = "http://47.97.201.219:8668/wm/WebService/WebRFID.asmx";
+    private static final String NAMESPACE = "http://tempuri.org/";
+
+    private static SoapObject get(String method, Map<String, String> params) {
+        if (TextUtils.isEmpty(method)) return null;
+        SoapObject request = new SoapObject(NAMESPACE, method);
+        if (params != null) {
+            Set<Map.Entry<String, String>> entries = params.entrySet();
+            for (Map.Entry<String, String> e : entries) {
+                PropertyInfo pi = new PropertyInfo();
+                pi.setName(e.getKey());
+                pi.setValue(e.getValue());
+                request.addProperty(pi);
+            }
+        }
+        SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
+        envelope.setOutputSoapObject(request);
+        try {
+            HttpTransportSE transportSE = new HttpTransportSE(NET_ADDRESS);
+            transportSE.call(NAMESPACE + method, envelope);
+            SoapObject result = (SoapObject) envelope.bodyIn; //获取到返回的结果，并强制转换成SoapObject对象
+            SoapObject test = (SoapObject) result.getProperty(0); //该对象中还嵌套了一个SoapObject对象，需要使用getProperty(0)把这个对象提取出来
+            return test;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static class NetTask extends AsyncTask<Object, Void, Object> {
+
+        private NetListener netListener;
+
+        @Override
+        protected Object doInBackground(Object... objects) {
+            if (objects == null || objects.length == 0) return null;
+            if (objects.length == 1) {
+                String method = (String) objects[0];
+                return NetUtil.get(method, null);
+            } else if (objects.length == 2) {
+                String method = (String) objects[0];
+                Map<String, String> params = (Map<String, String>) objects[1];
+                return NetUtil.get(method, params);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            if (o == null) {
+                return;
+            }
+            try {
+                SoapObject so = (SoapObject) o;
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < so.getPropertyCount(); i++) {
+                    sb.append(so.getProperty(i));
+                }
+                String result = sb.toString();
+                Log.e("TAG", result);
+                if (netListener != null) {
+                    netListener.success(result);
+                }
+            } catch (Exception e) {
+                if (netListener != null) {
+                    netListener.failure();
+                }
+            }
+        }
+
+        public NetTask listen(NetListener netListener) {
+            this.netListener = netListener;
+            return this;
+        }
+    }
+
+    public interface NetListener {
+        void success(String data);
+
+        void failure();
+    }
+}

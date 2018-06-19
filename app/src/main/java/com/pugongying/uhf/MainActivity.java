@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        QMUIStatusBarHelper.translucent(this, 0x0090ff);
+        QMUIStatusBarHelper.translucent(this);
 
         setContentView(R.layout.activity_main);
 
