@@ -43,6 +43,9 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ListActivity"
+            android:screenOrientation="portrait" />
 
     </application>
 

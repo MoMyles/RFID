@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static com.uhf.uhf.Common.Comm.Awl;
 import static com.uhf.uhf.Common.Comm.checkDevice;
@@ -48,8 +46,6 @@ import static com.uhf.uhf.UHF1.UHF001.UHF1handler;
 
 
 //import com.supoin.wireless.WirelessManager;
-
-@SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     // 读线程：
@@ -65,13 +61,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     private boolean isScaning = false;
 
     int scanCode = 0;
-    private Timer timer = null;
-    private TimerTask task = null;
-    private Message msg = null;
-    private long mlCount = 0;
-    private long mlTimerUnit = 10;
-    private int totalSec, yushu, min, sec;
-    private String strMsg = "";
 
 
     @Override
@@ -116,8 +105,8 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 if (null != Comm.uhf6)
                     Comm.uhf6.UHF6handler = uhfhandler;
 
-                Bundle bd = msg.getData();
-                strMsg = bd.get("Msg").toString();
+//                Bundle bd = msg.getData();
+//                strMsg = bd.get("Msg").toString();
 //                if (!TextUtils.isEmpty(strMsg)) {
 //                    tv_state.setText(strMsg);
 //                } else
@@ -270,15 +259,15 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //        tw.getChildAt(0).setBackgroundColor(Color.parseColor("#FF8C00"));
     }
 
-    private void onTouchButton() {
-        Intent scannerIntent = new Intent(SCN_CUST_ACTION_START);
-        sendBroadcast(scannerIntent);
-    }
-
-    private void onReleaseButton() {
-        Intent scannerIntent = new Intent(SCN_CUST_ACTION_CANCEL);
-        sendBroadcast(scannerIntent);
-    }
+//    private void onTouchButton() {
+//        Intent scannerIntent = new Intent(SCN_CUST_ACTION_START);
+//        sendBroadcast(scannerIntent);
+//    }
+//
+//    private void onReleaseButton() {
+//        Intent scannerIntent = new Intent(SCN_CUST_ACTION_CANCEL);
+//        sendBroadcast(scannerIntent);
+//    }
 
     private BroadcastReceiver mSamDataReceiver = new BroadcastReceiver() {
         @Override

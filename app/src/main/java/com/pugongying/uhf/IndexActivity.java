@@ -1,5 +1,6 @@
 package com.pugongying.uhf;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -65,20 +66,10 @@ public class IndexActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void doSearch() {
-        Map<String, String> params = new HashMap<>();
-        params.put("DATE", dateParam);
-        params.put("Status", statusParam);
-        new NetUtil.NetTask().listen(new NetUtil.NetListener() {
-            @Override
-            public void success(String data) {
-                //TODO 领养单
-            }
-
-            @Override
-            public void failure() {
-
-            }
-        }).execute("Smp_applyoutlist_RFID", params);
+        Intent intent = new Intent(this, ListActivity.class);
+        intent.putExtra("date", dateParam);
+        intent.putExtra("status", statusParam);
+        startActivity(intent);
     }
 
 
