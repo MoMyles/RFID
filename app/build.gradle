@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId 'com.pugongying.uhf'
         minSdkVersion 14
-        targetSdkVersion 19
+        targetSdkVersion 26
     }
     buildTypes {
         release {
@@ -24,11 +24,11 @@ dependencies {
     compile files('libs/Module_Android_DemoPower_1.6.5.1.jar')
     compile files('libs/ModuleAPI_Android_3.0.1.0.jar')
     compile files('libs/trinea-android-common.jar')
-    implementation files('libs/xUtils-2.5.5.jar')
-    implementation files('libs/cw-deviceapi20171113.jar')
-    implementation files('libs/UHF_API_JAR.jar')
-    implementation files('libs/classes.jar')
-    implementation files('libs/ksoap2-android-assembly-3.6.2-jar-with-dependencies.jar')
+    compile files('libs/xUtils-2.5.5.jar')
+    compile files('libs/cw-deviceapi20171113.jar')
+    compile files('libs/UHF_API_JAR.jar')
+    compile files('libs/classes.jar')
+    compile files('libs/ksoap2-android-assembly-3.6.2-jar-with-dependencies.jar')
     compile 'com.qmuiteam:qmui:1.1.3'
     compile 'org.greenrobot:eventbus:3.1.1'
     compile 'com.alibaba:fastjson:1.2.47'
