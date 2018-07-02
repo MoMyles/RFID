@@ -8,6 +8,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.pugongying.uhf.adapter.ListAdapter;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
@@ -40,8 +42,20 @@ public class ListActivity extends AppCompatActivity {
         task = new NetUtil.NetTask().listen(new NetUtil.NetListener() {
             @Override
             public void success(String data) {
+                // [{"申请编码":"0000000002","客户":"PANASH","申请人":"admin","领用数量":0.00,"状态":"未扫描"}]
+                if (datas != null && !datas.isEmpty()){
+                    datas.clear();
+                }
                 try {
-
+                    JSONArray arr = JSON.parseArray(data);
+                    if (arr != null && !arr.isEmpty()) {
+                        int size = arr.size();
+                        for (int i=0;i<size;i++){
+                            JSONObject o = arr.getJSONObject(i);
+                            o.put("expand", false);
+                            datas.add(o);
+                        }
+                    }
                 } catch (Exception e) {
                     failure();
                 }

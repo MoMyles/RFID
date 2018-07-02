@@ -49,6 +49,8 @@ public class LoginActivity extends AppCompatActivity {
                 new NetUtil.NetTask().listen(new NetUtil.NetListener() {
                     @Override
                     public void success(String data) {
+                        //[{"UserCode":"001 ","Name":"admin ","Depart":"总经办","chnCorpName":"绍兴极绎外贸有限公司"
+                        // ,"engCorpName":"SHAOXING GE","LoginKey":"F9A8926C7AA146BAA67EFE8BFE947941"}]
                         JSONArray array = JSON.parseArray(data);
                         if (array != null && !array.isEmpty()) {
                             JSONObject obj = array.getJSONObject(0);
