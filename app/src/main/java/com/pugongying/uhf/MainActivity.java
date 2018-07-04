@@ -12,24 +12,26 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.pugongying.uhf.adapter.RFIDAdapter;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
+import com.uhf.uhf.Common.InventoryBuffer;
 import com.uhf.uhf.UHF1.UHF001;
 import com.uhf.uhf.UHF1Function.AndroidWakeLock;
 import com.uhf.uhf.UHF1Function.SPconfig;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
 import static com.uhf.uhf.Common.Comm.Awl;
@@ -57,8 +59,12 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     private TextView tv_tags, tv_back, tv_complete;
     private Button btn_scan;
+    private RecyclerView rv_list;
 
+
+    private RFIDAdapter rfidAdapter;
     private boolean isScaning = false;
+    private int scanIndex = 0;
 
     int scanCode = 0;
 
@@ -146,7 +152,32 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         tv_complete.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO 把识别结果对相应表单进行更新操作
+                if (isScaning) {
+                    Toast.makeText(getApplicationContext(), "请先关闭电子标签", Toast.LENGTH_SHORT).show();
+                } else {
+                    //TODO 把识别结果对相应表单进行更新操作
+                    // 1.16进制转ASCII值
+                    // 2.ASCII值在找对应的数字字母
+                    Bundle bundle = getIntent().getExtras();
+                    if (bundle != null) {
+                        //{"申请编码":"0000000002","客户":"PANASH","申请人":"admin","领用数量":0.00,"状态":"未扫描"}
+                        Map<String, Object> data = (Map<String, Object>) bundle.getSerializable("data");
+                        if (data != null) {
+                            //SoID 申请编码
+                            //Takeman 联系人
+                            //customNo 客户ID
+                            //customName 客户名
+                            //ContactNumber 联系电话
+                            //strDetail 产品号◆产品号◆产品号◆产品号◆产品号
+                            //remark 备注
+
+                        } else {
+                            Toast.makeText(getApplicationContext(), "此领样单有问题, 请找相关人员确认!", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "此领样单有问题, 请找相关人员确认!", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
         });
 
@@ -277,6 +308,12 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 try {
                     message = intent.getStringExtra(SCN_CUST_EX_SCODE).toString();
                     Log.e("TAG", "扫描到的结果：" + message);
+                    if (!isExists(message)) {
+                        InventoryBuffer.InventoryTagMap itm = new InventoryBuffer.InventoryTagMap();
+                        itm.strTID = "扫描获得" + scanIndex++;
+                        itm.strEPC = message;
+                        lsTagList.add(itm);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.e("in", e.toString());
@@ -284,6 +321,19 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             }
         }
     };
+
+    private boolean isExists(String message) {
+        if (lsTagList != null && !lsTagList.isEmpty()) {
+            Iterator<InventoryBuffer.InventoryTagMap> iterator = lsTagList.iterator();
+            while (iterator.hasNext()) {
+                InventoryBuffer.InventoryTagMap ibitm = iterator.next();
+                if (ibitm.strEPC != null && ibitm.strEPC.equals(message)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     @Override
     protected void onDestroy() {
@@ -378,61 +428,76 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         Comm.Connect();
     }
 
-    String[] Coname = new String[]{"NO", "                    EPC ID ", "Count"};
+//    String[] Coname = new String[]{"NO", "                    EPC ID ", "Count"};
 
     private void showlist() {
-        try {
-            int index = 1;
-            int ReadCnt = 0;//个数
-            List<Map<String, ?>> list = new ArrayList<Map<String, ?>>();
-            Map<String, String> h = new HashMap<String, String>();
-            for (int i = 0; i < Coname.length; i++)
-                h.put(Coname[i], Coname[i]);
-            list.add(h);
-            String epcstr = "";//epc
-
-            int ListIndex = 0;
-            if (tagListSize > 0)
-                tv_tags.setText(String.valueOf(tagListSize));
-            if (isQuick && !Comm.isrun)
-//                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
-
-                if (!isQuick || !Comm.isrun) {
-                    while (tagListSize > 0) {
-                        if (index < 100) {
-                            epcstr = lsTagList.get(ListIndex).strEPC.replace(" ", "");
-//                        if (epcstr.length() > 4) {
-                            Map<String, String> m = new HashMap<String, String>();
-                            m.put(Coname[0], String.valueOf(index));
-                            m.put(Coname[1], epcstr);
-                            ReadCnt = lsTagList.get(ListIndex).nReadCount;
-                            m.put(Coname[2], "1");
-                            //int mRSSI=Integer.parseInt(lsTagList.get(ListIndex).strRSSI);
-                            index++;
-                            list.add(m);
-
-//                        }
-                        }
-                        ListIndex++;
-                        tagListSize--;
-                    }
-
-                }
-            if (!isQuick || !Comm.isrun) {
-                ListAdapter adapter = new MyAdapter(this, list,
-                        R.layout.listitemview_inv, Coname, new int[]{
-                        R.id.textView_readsort, R.id.textView_readepc,
-                        R.id.textView_readcnt});
-
-                // layout为listView的布局文件，包括三个TextView，用来显示三个列名所对应的值
-                // ColumnNames为数据库的表的列名
-                // 最后一个参数是int[]类型的，为view类型的id，用来显示ColumnNames列名所对应的值。view的类型为TextView
-//                listView.setAdapter(adapter);
-
+        if (rv_list == null) {
+            rv_list = findViewById(R.id.rv_list);
+            rv_list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+            rv_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+            if (rfidAdapter == null) {
+                rfidAdapter = new RFIDAdapter(this, lsTagList);
+                rv_list.setAdapter(rfidAdapter);
             }
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
         }
+        if (tagListSize > 0) {
+        }
+        if (isQuick && !Comm.isrun) {
+//                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
+        }
+        rfidAdapter.notifyDataSetChanged();
+//        try {
+//            int index = 1;
+//            int ReadCnt = 0;//个数
+//            List<Map<String, ?>> list = new ArrayList<Map<String, ?>>();
+//            Map<String, String> h = new HashMap<String, String>();
+//            for (int i = 0; i < Coname.length; i++)
+//                h.put(Coname[i], Coname[i]);
+//            list.add(h);
+//            String epcstr = "";//epc
+//
+//            int ListIndex = 0;
+//            if (tagListSize > 0)
+//                tv_tags.setText(String.valueOf(tagListSize));
+//            if (isQuick && !Comm.isrun)
+////                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
+//
+//                if (!isQuick || !Comm.isrun) {
+//                    while (tagListSize > 0) {
+//                        if (index < 100) {
+//                            epcstr = lsTagList.get(ListIndex).strEPC.replace(" ", "");
+////                        if (epcstr.length() > 4) {
+//                            Map<String, String> m = new HashMap<String, String>();
+//                            m.put(Coname[0], String.valueOf(index));
+//                            m.put(Coname[1], epcstr);
+//                            ReadCnt = lsTagList.get(ListIndex).nReadCount;
+//                            m.put(Coname[2], "1");
+//                            //int mRSSI=Integer.parseInt(lsTagList.get(ListIndex).strRSSI);
+//                            index++;
+//                            list.add(m);
+//
+////                        }
+//                        }
+//                        ListIndex++;
+//                        tagListSize--;
+//                    }
+//
+//                }
+//            if (!isQuick || !Comm.isrun) {
+//                ListAdapter adapter = new MyAdapter(this, list,
+//                        R.layout.listitemview_inv, Coname, new int[]{
+//                        R.id.textView_readsort, R.id.textView_readepc,
+//                        R.id.textView_readcnt});
+//
+//                // layout为listView的布局文件，包括三个TextView，用来显示三个列名所对应的值
+//                // ColumnNames为数据库的表的列名
+//                // 最后一个参数是int[]类型的，为view类型的id，用来显示ColumnNames列名所对应的值。view的类型为TextView
+////                listView.setAdapter(adapter);
+//
+//            }
+//        } catch (NumberFormatException e) {
+//            e.printStackTrace();
+//        }
 //        if (!isrun)
 //            tv_state.setText(String.valueOf("等待操作..."));
     }

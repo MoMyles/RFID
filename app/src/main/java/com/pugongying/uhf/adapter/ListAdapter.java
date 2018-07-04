@@ -3,6 +3,7 @@ package com.pugongying.uhf.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -55,6 +56,9 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.V> {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(context, MainActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("data", obj);
+                        intent.putExtras(bundle);
                         context.startActivity(intent);
                     }
                 });
