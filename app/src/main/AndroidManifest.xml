@@ -33,7 +33,7 @@
         </receiver>
 
         <activity
-            android:name=".IndexActivity"
+            android:name=".LoginActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,7 +41,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".IndexActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"

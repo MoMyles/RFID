@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -20,42 +22,59 @@ import java.util.List;
 import java.util.Map;
 
 public class ListActivity extends AppCompatActivity {
+    private TextView back;
     private RecyclerView rvList;
     private ListAdapter adapter;
     private final List<JSONObject> datas = new ArrayList<>();
-
-    private NetUtil.NetTask task;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         QMUIStatusBarHelper.translucent(this);
         setContentView(R.layout.activity_list);
-
+        back = findViewById(R.id.back);
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
 
         rvList = findViewById(R.id.rv_list);
         rvList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         rvList.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         adapter = new ListAdapter(this, datas);
         rvList.setAdapter(adapter);
+    }
 
-        task = new NetUtil.NetTask().listen(new NetUtil.NetListener() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        doRequest();
+    }
+
+    public void doRequest() {
+        Map<String, String> params = new HashMap<>();
+        params.put("DATE", getIntent().getStringExtra("date"));
+        params.put("Status", getIntent().getStringExtra("status"));
+        new NetUtil.NetTask().listen(new NetUtil.NetListener() {
             @Override
             public void success(String data) {
                 // [{"申请编码":"0000000002","客户":"PANASH","申请人":"admin","领用数量":0.00,"状态":"未扫描"}]
-                if (datas != null && !datas.isEmpty()){
+                if (datas != null && !datas.isEmpty()) {
                     datas.clear();
                 }
                 try {
                     JSONArray arr = JSON.parseArray(data);
                     if (arr != null && !arr.isEmpty()) {
                         int size = arr.size();
-                        for (int i=0;i<size;i++){
+                        for (int i = 0; i < size; i++) {
                             JSONObject o = arr.getJSONObject(i);
                             o.put("expand", false);
                             datas.add(o);
                         }
                     }
+                    adapter.notifyDataSetChanged();
                 } catch (Exception e) {
                     failure();
                 }
@@ -65,13 +84,6 @@ public class ListActivity extends AppCompatActivity {
             public void failure() {
                 Toast.makeText(ListActivity.this, "领样单列表获取失败", Toast.LENGTH_SHORT).show();
             }
-        });
-    }
-
-    public void doRequest() {
-        Map<String, String> params = new HashMap<>();
-        params.put("DATE", getIntent().getStringExtra("date"));
-        params.put("Status", getIntent().getStringExtra("status"));
-        task.execute("Smp_applyoutlist_RFID", params);
+        }).execute("Smp_applyoutlist_RFID", params);
     }
 }

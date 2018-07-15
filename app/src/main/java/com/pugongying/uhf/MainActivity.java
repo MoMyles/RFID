@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,6 +26,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.pugongying.uhf.adapter.RFIDAdapter;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
@@ -31,8 +37,17 @@ import com.uhf.uhf.UHF1.UHF001;
 import com.uhf.uhf.UHF1Function.AndroidWakeLock;
 import com.uhf.uhf.UHF1Function.SPconfig;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
+import cn.trinea.android.common.util.ToastUtils;
 
 import static com.uhf.uhf.Common.Comm.Awl;
 import static com.uhf.uhf.Common.Comm.checkDevice;
@@ -58,12 +73,14 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public static final String SCN_CUST_ACTION_CANCEL = "android.intent.action.SCANNER_BUTTON_UP";
 
     private TextView tv_tags, tv_back, tv_complete;
-    private Button btn_scan;
+    private Button btn_scan, btn_clean, btn_detail;
     private RecyclerView rv_list;
+    private final List<ScanEntity> dataList = new ArrayList();
 
 
     private RFIDAdapter rfidAdapter;
     private boolean isScaning = false;
+    private boolean isShow = false;
     private int scanIndex = 0;
 
     int scanCode = 0;
@@ -111,8 +128,11 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 if (null != Comm.uhf6)
                     Comm.uhf6.UHF6handler = uhfhandler;
 
-//                Bundle bd = msg.getData();
-//                strMsg = bd.get("Msg").toString();
+                Bundle bd = msg.getData();
+                String strMsg = bd.get("Msg").toString();
+                if (TextUtils.isEmpty(strMsg)) {
+                    Log.e("connectH", "模块初始化失败");
+                }
 //                if (!TextUtils.isEmpty(strMsg)) {
 //                    tv_state.setText(strMsg);
 //                } else
@@ -140,13 +160,22 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //        button_clean = (Button) findViewById(R.id.button_readclear);
 //        button_set = (Button) findViewById(R.id.button_set);
 //        listView = (ListView) findViewById(R.id.listView_epclist);
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this);
+        }
         btn_scan = findViewById(R.id.btn_scan);
+        btn_clean = findViewById(R.id.btn_clean);
+        btn_detail = findViewById(R.id.btn_detail);
         tv_back = findViewById(R.id.tv_back);
         tv_complete = findViewById(R.id.tv_complete);
         tv_back.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                if (isScaning) {
+                   ToastUtils.show(getApplicationContext(), "正在操作, 无法返回");
+                } else {
+                    finish();
+                }
             }
         });
         tv_complete.setOnClickListener(new OnClickListener() {
@@ -161,15 +190,56 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     Bundle bundle = getIntent().getExtras();
                     if (bundle != null) {
                         //{"申请编码":"0000000002","客户":"PANASH","申请人":"admin","领用数量":0.00,"状态":"未扫描"}
-                        Map<String, Object> data = (Map<String, Object>) bundle.getSerializable("data");
-                        if (data != null) {
+                        // Map<String, Object> data = (Map<String, Object>) bundle.getSerializable("data");
+                        String soId = getIntent().getStringExtra("soId");
+                        if (!TextUtils.isEmpty(soId)) {
                             //SoID 申请编码
                             //Takeman 联系人
-                            //customNo 客户ID
-                            //customName 客户名
+                            //customNo
+                            //customName 客户名 客户ID
                             //ContactNumber 联系电话
                             //strDetail 产品号◆产品号◆产品号◆产品号◆产品号
                             //remark 备注
+                            Map<String, Object> param = new HashMap<>();
+                            SharedPreferences sp = getSharedPreferences("pgy_rfid", MODE_PRIVATE);
+                            param.put("UserCode", sp.getString("UserCode", ""));
+                            param.put("SoID", soId);
+                            param.put("strDetail", getData());
+                            final LoadingDialog dialog = LoadingDialog.newInstance();
+                            dialog.show(getSupportFragmentManager(), "save");
+                            new NetUtil.NetTask().listen(new NetUtil.NetListener() {
+                                @Override
+                                public void success(String data) {
+                                    //[{"succ":"-1","msg":"只能在新制状态下修改"}]
+                                    JSONArray array = JSON.parseArray(data);
+                                    if (array != null && array.size() > 0) {
+                                        JSONObject obj = array.getJSONObject(0);
+                                        if (obj != null) {
+                                            if (obj.getIntValue("succ") == 0) {
+                                                ToastUtils.show(getApplicationContext(), "保存成功");
+                                                finish();
+                                            } else {
+                                                ToastUtils.show(getApplicationContext(), obj.getString("msg"));
+                                            }
+                                        } else {
+                                            ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
+                                        }
+                                    } else {
+                                        ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
+                                    }
+                                    if (dialog.isVisible()) {
+                                        dialog.dismiss();
+                                    }
+                                }
+
+                                @Override
+                                public void failure() {
+                                    if (dialog.isVisible()) {
+                                        dialog.dismiss();
+                                    }
+                                    ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
+                                }
+                            }).execute("Smp_applyoutAdd_RFID", param);
 
                         } else {
                             Toast.makeText(getApplicationContext(), "此领样单有问题, 请找相关人员确认!", Toast.LENGTH_SHORT).show();
@@ -180,9 +250,16 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 }
             }
         });
-
-//        tv_state = (TextView) findViewById(R.id.textView_invstate);
         tv_tags = (TextView) findViewById(R.id.textView_readallcnt);
+        rv_list = findViewById(R.id.rv_list);
+        rv_list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        rv_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        if (!lsTagList.isEmpty()) {
+            lsTagList.clear();
+        }
+        rfidAdapter = new RFIDAdapter(this, dataList);
+        rv_list.setAdapter(rfidAdapter);
+//        tv_state = (TextView) findViewById(R.id.textView_invstate);
 //        textView_time = (TextView) findViewById(R.id.textView_time);
 //        textView_time.setText("00:00:00");
 
@@ -218,6 +295,70 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     isScaning = false;
                     btn_scan.setText("电子标签开启");
 //                    StopHandleUI();
+                }
+            }
+        });
+
+        btn_clean.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isScaning) {
+                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭扫描!");
+                    return;
+                }
+                dataList.clear();
+                lsTagList.clear();
+                tagListSize = 0;
+                rfidAdapter.notifyDataSetChanged();
+                tv_tags.setText("合计: 0 个");
+            }
+        });
+
+        btn_detail.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isScaning){
+                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭扫描!");
+                    return;
+                }
+                if (isShow) {
+                    isShow = false;
+                    btn_detail.setText("查看详情");
+                    for (ScanEntity se : dataList) {
+                        se.setShow(false);
+                    }
+                    rfidAdapter.notifyDataSetChanged();
+                } else {
+                    isShow = true;
+                    btn_detail.setText("取消查看");
+                    Map<String, Object> param = new HashMap<>();
+
+                    param.put("barcode", getData());
+                    new NetUtil.NetTask().listen(new NetUtil.NetListener() {
+                        @Override
+                        public void success(String data) {
+                            //[{"条码":"0000018923","产品号":"ADK-JQ-3901B        ","品名":"全涤条子 ADK-JQ-3901B","规格":""},{"条码":"0000022066","产品号":"CEY014              "
+                            // ,"品名":"200DSSY单面麻","规格":"75D/72FFDY/(30DFDY+30DPOY)×200D/48FSSY"}
+                            // ,{"条码":"0000CRP001","产品号":"CRP001              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP002","产品号":"CRP002              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP003","产品号":"CRP003              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP004","产品号":"CRP004              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP006","产品号":"CRP006              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP007","产品号":"CRP007              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP008","产品号":"CRP008              ","品名":"乱麻印花","规格":""}]
+                            JSONArray array = JSON.parseArray(data);
+                            int size = array == null ? 0 : array.size();
+                            for (ScanEntity se : dataList) {
+                                for (int i = 0; i < size; i++) {
+                                    JSONObject obj = array.getJSONObject(i);
+                                    if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码"))) {
+                                        se.setObj(obj);
+                                    }
+                                }
+                                se.setShow(true);
+                            }
+                            rfidAdapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void failure() {
+                            ToastUtils.show(getApplicationContext(), "查看详情失败");
+                        }
+                    }).execute("QueryBarcode", param);
                 }
             }
         });
@@ -301,37 +442,70 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //    }
 
     private BroadcastReceiver mSamDataReceiver = new BroadcastReceiver() {
+        private MediaPlayer mp;
+        private MediaPlayer mp2;
+
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (mp == null) {
+                mp = MediaPlayer.create(MainActivity.this, R.raw.beep2);
+            }
+            if (mp2 == null) {
+                mp2 = MediaPlayer.create(MainActivity.this, R.raw.beep);
+            }
             if (intent.getAction().equals(SCN_CUST_ACTION_SCODE)) {
                 String message;
                 try {
                     message = intent.getStringExtra(SCN_CUST_EX_SCODE).toString();
-                    Log.e("TAG", "扫描到的结果：" + message);
                     if (!isExists(message)) {
+                        Toast.makeText(MainActivity.this, "扫描成功：" + message, Toast.LENGTH_SHORT).show();
+                        if (mp != null) {
+                            mp.start();
+                        }
                         InventoryBuffer.InventoryTagMap itm = new InventoryBuffer.InventoryTagMap();
                         itm.strTID = "扫描获得" + scanIndex++;
                         itm.strEPC = message;
                         lsTagList.add(itm);
+                        tagListSize = lsTagList.size();
+                        tv_tags.setText("合计: " + tagListSize + " 个");
+                        showlist();
+                    } else {
+                        if (mp2 != null) {
+                            mp2.start();
+                        }
+                        Toast.makeText(MainActivity.this, "该条码" + message + "已存在，无需重复扫描", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.e("in", e.toString());
+                    Log.e("TAG_ER", e.toString());
                 }
             }
         }
     };
 
+    private String getData() {
+        StringBuffer sb = new StringBuffer();
+        for (InventoryBuffer.InventoryTagMap map : lsTagList) {
+            //                    if (!"".equals(sb.toString())){
+            //                        sb.append("◆");
+            //                    }
+            sb.append(CodeUtil.getDecodeStr(map) + "◆");
+        }
+        return sb.toString();
+    }
+
     private boolean isExists(String message) {
-        if (lsTagList != null && !lsTagList.isEmpty()) {
+        if (!lsTagList.isEmpty()) {
             Iterator<InventoryBuffer.InventoryTagMap> iterator = lsTagList.iterator();
             while (iterator.hasNext()) {
                 InventoryBuffer.InventoryTagMap ibitm = iterator.next();
-                if (ibitm.strEPC != null && ibitm.strEPC.equals(message)) {
+//                Log.e("TAG", CodeUtil.getDecodeStr(ibitm) + "-" + message);
+                if (CodeUtil.getDecodeStr(ibitm).equals(message)) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -339,6 +513,9 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mSamDataReceiver);
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this);
+        }
     }
 
     //开始计时
@@ -411,6 +588,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     public void InitDevice() {
         Comm.repeatSound = false;
+        Comm.rfidSleep = 100;
         Comm.app = getApplication();
         Comm.spConfig = new SPconfig(this);
         context = MainActivity.this;
@@ -422,7 +600,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             Comm.powerDown();
             Toast.makeText(MainActivity.this, R.string.powerUpFalse,
                     Toast.LENGTH_SHORT).show();
-        } else {
         }
         Comm.connecthandler = connectH;
         Comm.Connect();
@@ -430,17 +607,24 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
 //    String[] Coname = new String[]{"NO", "                    EPC ID ", "Count"};
 
-    private void showlist() {
-        if (rv_list == null) {
-            rv_list = findViewById(R.id.rv_list);
-            rv_list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-            rv_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-            if (rfidAdapter == null) {
-                rfidAdapter = new RFIDAdapter(this, lsTagList);
-                rv_list.setAdapter(rfidAdapter);
-            }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(MessageEvent messageEvent) {
+        switch (messageEvent.getType()) {
+            case 0x33:
+                tagListSize = lsTagList.size();
+                tv_tags.setText("合计: " + tagListSize + " 个");
+                break;
         }
+    }
+
+
+    private void showlist() {
         if (tagListSize > 0) {
+            dataList.clear();
+            for (int i = 0; i < tagListSize; i++) {
+                dataList.add(new ScanEntity(lsTagList.get(i)));
+            }
+            tv_tags.setText("合计: " + tagListSize + " 个");
         }
         if (isQuick && !Comm.isrun) {
 //                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));

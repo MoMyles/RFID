@@ -17,7 +17,7 @@ public class NetUtil {
     private static final String NET_ADDRESS = "http://47.97.201.219:8668/wm/WebService/WebRFID.asmx";
     private static final String NAMESPACE = "http://tempuri.org/";
 
-    private static SoapObject get(String method, Map<String, String> params) {
+    private static Object get(String method, Map<String, String> params) {
         if (TextUtils.isEmpty(method)) return null;
         SoapObject request = new SoapObject(NAMESPACE, method);
         if (params != null) {
@@ -29,14 +29,15 @@ public class NetUtil {
                 request.addProperty(pi);
             }
         }
-        SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
-        envelope.setOutputSoapObject(request);
         try {
-            HttpTransportSE transportSE = new HttpTransportSE(NET_ADDRESS);
-            transportSE.call(NAMESPACE + method, envelope);
-            SoapObject result = (SoapObject) envelope.bodyIn; //获取到返回的结果，并强制转换成SoapObject对象
-            SoapObject test = (SoapObject) result.getProperty(0); //该对象中还嵌套了一个SoapObject对象，需要使用getProperty(0)把这个对象提取出来
-            return test;
+            final HttpTransportSE httpTransportSE = new HttpTransportSE(NET_ADDRESS);
+            httpTransportSE.debug = false;
+            final SoapSerializationEnvelope soapSerialize = new SoapSerializationEnvelope(SoapEnvelope.VER12);
+            soapSerialize.bodyOut = request;
+            soapSerialize.dotNet = true;
+            soapSerialize.setOutputSoapObject(request);
+            httpTransportSE.call(NAMESPACE + method, soapSerialize);
+            return soapSerialize.getResponse();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,12 +68,12 @@ public class NetUtil {
                 return;
             }
             try {
-                SoapObject so = (SoapObject) o;
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < so.getPropertyCount(); i++) {
-                    sb.append(so.getProperty(i));
-                }
-                String result = sb.toString();
+//                SoapObject so = (SoapObject) o;
+//                StringBuilder sb = new StringBuilder();
+//                for (int i = 0; i < so.getPropertyCount(); i++) {
+//                    sb.append(so.getProperty(i));
+//                }
+                String result = o.toString();
                 Log.e("TAG", result);
                 if (netListener != null) {
                     netListener.success(result);

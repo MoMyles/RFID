@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,15 +51,16 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.V> {
                 if ("未扫描".equals(status)) {
                     holder.tv5.setTextColor(Color.RED);
                 } else {
-                    holder.tv5.setTextColor(Color.GREEN);
+                    holder.tv5.setTextColor(Color.parseColor("#0090ff"));
                 }
                 holder.btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(context, MainActivity.class);
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("data", obj);
-                        intent.putExtras(bundle);
+//                        Bundle bundle = new Bundle();
+//                        bundle.putSerializable("data", obj);
+//                        intent.putExtras(bundle);
+                        intent.putExtra("soId", obj.getString("申请编码"));
                         context.startActivity(intent);
                     }
                 });

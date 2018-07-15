@@ -12,8 +12,10 @@
         android:background="#0090ff">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/tv_back"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="16dp"
@@ -30,8 +32,10 @@
             android:textSize="16sp" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/tv_complete"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="16dp"
@@ -46,27 +50,56 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="@drawable/border_top"
+        android:gravity="center_vertical"
         android:padding="16dp">
 
         <TextView
             android:id="@+id/textView_readallcnt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:text="合计: 3件"
+            android:text="合计: 0 个"
             android:textColor="#000"
             android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/btn_scan"
-            android:layout_width="128dp"
-            android:layout_height="32dp"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/btn_circle"
-            android:text="电子标签开启"
-            android:textColor="@android:color/black"
-            android:textSize="16sp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textView_readallcnt"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btn_clean"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@drawable/btn_circle"
+                android:text="清空"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btn_detail"
+                android:layout_width="72dp"
+                android:layout_height="32dp"
+                android:layout_marginLeft="8dp"
+                android:layout_toRightOf="@id/btn_clean"
+                android:background="@drawable/btn_circle"
+                android:text="查看详情"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btn_scan"
+                android:layout_width="128dp"
+                android:layout_height="32dp"
+                android:layout_alignParentRight="true"
+                android:layout_gravity="right"
+                android:background="@drawable/btn_circle"
+                android:text="电子标签开启"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+
     </RelativeLayout>
 
     <android.support.v7.widget.RecyclerView

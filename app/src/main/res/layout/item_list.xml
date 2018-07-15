@@ -84,7 +84,7 @@
             android:layout_marginTop="4dp"
             android:text="未扫描"
             android:textColor="#ff0000"
-            android:textSize="10sp" />
+            android:textSize="14sp" />
     </RelativeLayout>
 
     <Button
