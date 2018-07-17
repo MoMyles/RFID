@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UHFDemo</string>
+    <string name="app_name">RFID条码扫描</string>
     <string name="app_activityName"> \tUHFDemo\t\t\t\t\tVer 1.1.12</string>
     <string name="hello_world">Hello world!</string>
     <string name="connect">连接</string>
