@@ -4,6 +4,8 @@
     android:layout_height="match_parent"
     android:background="#fff"
     android:fitsSystemWindows="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -11,6 +13,17 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="#0090ff">
+        <TextView
+            android:id="@+id/tv_back"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
+            android:text="返回"
+            android:textColor="#fff"
+            android:textSize="14sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -26,6 +39,35 @@
         android:layout_height="match_parent"
         android:layout_below="@id/top"
         android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tv1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="API地址"
+                android:textColor="#555"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/et1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_toRightOf="@id/tv1"
+                android:background="@drawable/input_bg"
+                android:hint="请输入访问API地址"
+                android:maxLines="1"
+                android:minLines="1"
+                android:padding="8dp"
+                android:textColor="#000"
+                android:textSize="14sp" />
+        </RelativeLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"

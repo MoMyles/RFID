@@ -94,7 +94,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_gravity="right"
                 android:background="@drawable/btn_selector"
-                android:text="开启红外扫描"
+                android:text="开启条码扫描"
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
         </RelativeLayout>

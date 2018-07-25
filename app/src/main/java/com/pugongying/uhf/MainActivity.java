@@ -273,14 +273,14 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             public void onClick(View arg0) {
                 if (isRFID) {//1.如果是高频识别
                     isRFID = false;
-                    btn_scan.setText("关闭红外扫描");
+                    btn_scan.setText("开启电子标签");
                     if (isScaning) {
                         // 2.正在进行 则关闭
                         closeRFID();
                     }
                 } else {
                     isRFID = true;
-                    btn_scan.setText("开启红外扫描");
+                    btn_scan.setText("开启条码扫描");
                 }
             }
         });
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             @Override
             public void onClick(View view) {
                 if (isScaning) {
-                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭扫描!");
+                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
                     return;
                 }
                 dataList.clear();
@@ -304,7 +304,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             @Override
             public void onClick(View view) {
                 if (isScaning) {
-                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭扫描!");
+                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
                     return;
                 }
                 if (isShow) {

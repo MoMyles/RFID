@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.pugongying.uhf.util.PrefsUtil;
+
 import cn.trinea.android.common.util.ToastUtils;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
@@ -19,6 +21,11 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
         onBindView(savedInstanceState);
+        init();
+    }
+
+    private void init() {
+        NetUtil.NET_ADDRESS = PrefsUtil.get(this, "url", NetUtil.NET_ADDRESS);
     }
 
     private void onBindView(Bundle savedInstanceState) {

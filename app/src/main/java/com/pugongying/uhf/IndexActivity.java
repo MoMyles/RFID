@@ -21,7 +21,7 @@ import org.greenrobot.eventbus.Subscribe;
 public class IndexActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button mBtnSearch;
-    private TextView mTvDate, mTvStatus;
+    private TextView mTvBack, mTvDate, mTvStatus;
     private String dateParam, statusParam;
 
 
@@ -37,6 +37,13 @@ public class IndexActivity extends AppCompatActivity implements View.OnClickList
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
+
+        mTvBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
 
         mBtnSearch = findViewById(R.id.btn_search);
         mBtnSearch.setOnClickListener(this);
