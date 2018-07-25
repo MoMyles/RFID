@@ -65,13 +65,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/textView_readallcnt"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="16dp">
 
             <Button
                 android:id="@+id/btn_clean"
                 android:layout_width="64dp"
                 android:layout_height="32dp"
-                android:background="@drawable/btn_circle"
+                android:background="@drawable/btn_selector"
                 android:text="清空"
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
@@ -82,7 +82,7 @@
                 android:layout_height="32dp"
                 android:layout_marginLeft="8dp"
                 android:layout_toRightOf="@id/btn_clean"
-                android:background="@drawable/btn_circle"
+                android:background="@drawable/btn_selector"
                 android:text="查看详情"
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
@@ -93,8 +93,8 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_gravity="right"
-                android:background="@drawable/btn_circle"
-                android:text="电子标签开启"
+                android:background="@drawable/btn_selector"
+                android:text="开启红外扫描"
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
         </RelativeLayout>

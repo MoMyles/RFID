@@ -30,6 +30,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.pugongying.uhf.adapter.RFIDAdapter;
+import com.pugongying.uhf.util.PrefsUtil;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
 import com.uhf.uhf.Common.InventoryBuffer;
@@ -79,7 +80,8 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
 
     private RFIDAdapter rfidAdapter;
-    private boolean isScaning = false;
+    private boolean isRFID = true;// 默认高频识别
+    private boolean isScaning = false;// 是否在进行高频率识别
     private boolean isShow = false;
     private int scanIndex = 0;
 
@@ -172,7 +174,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             @Override
             public void onClick(View v) {
                 if (isScaning) {
-                   ToastUtils.show(getApplicationContext(), "正在操作, 无法返回");
+                    ToastUtils.show(getApplicationContext(), "正在操作, 无法返回");
                 } else {
                     finish();
                 }
@@ -184,7 +186,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 if (isScaning) {
                     Toast.makeText(getApplicationContext(), "请先关闭电子标签", Toast.LENGTH_SHORT).show();
                 } else {
-                    //TODO 把识别结果对相应表单进行更新操作
                     // 1.16进制转ASCII值
                     // 2.ASCII值在找对应的数字字母
                     Bundle bundle = getIntent().getExtras();
@@ -270,31 +271,16 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             @SuppressWarnings("unused")
             @Override
             public void onClick(View arg0) {
-                if (!isScaning) {
-                    // 开启扫描
-                    try {
-//                        startTimerTask();
-//                        button_clean.performClick();
-//                        tv_state.setText("开始读取...");
-                        Awl.WakeLock();
-                        Comm.startScan();
-                        isScaning = true;
-                        btn_scan.setText("电子标签关闭");
-//                        ReadHandleUI();
-                    } catch (Exception ex) {
-                        Toast.makeText(MainActivity.this,
-                                "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
-                                .show();
+                if (isRFID) {//1.如果是高频识别
+                    isRFID = false;
+                    btn_scan.setText("关闭红外扫描");
+                    if (isScaning) {
+                        // 2.正在进行 则关闭
+                        closeRFID();
                     }
                 } else {
-                    // 扫描中 则关闭
-                    Awl.ReleaseWakeLock();
-                    Comm.stopScan();
-                    showlist();
-
-                    isScaning = false;
-                    btn_scan.setText("电子标签开启");
-//                    StopHandleUI();
+                    isRFID = true;
+                    btn_scan.setText("开启红外扫描");
                 }
             }
         });
@@ -317,7 +303,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         btn_detail.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isScaning){
+                if (isScaning) {
                     ToastUtils.show(getApplicationContext(), "扫描中，请先关闭扫描!");
                     return;
                 }
@@ -384,7 +370,16 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //                showlist();
 //            }
 //        });
-
+        // 设置功率
+        try {
+            Comm.opeT = Comm.operateType.setPower;
+            String powerValueStr = PrefsUtil.get(this, "power", "1500");
+            Comm.setAntPower(Integer.valueOf(powerValueStr), 0, 0, 0);
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(),
+                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
+                    .show();
+        }
         // Register receiver
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
@@ -431,6 +426,36 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //        tw.getChildAt(0).setBackgroundColor(Color.parseColor("#FF8C00"));
     }
 
+    private void startRFID() {
+        // 开启扫描
+        try {
+//                        startTimerTask();
+//                        button_clean.performClick();
+//                        tv_state.setText("开始读取...");
+            Awl.WakeLock();
+            Comm.startScan();
+            isScaning = true;
+//            btn_scan.setText("电子标签关闭");
+//                        ReadHandleUI();
+            Toast.makeText(getApplicationContext(), "开启了高频识别", Toast.LENGTH_SHORT).show();
+        } catch (Exception ex) {
+            Toast.makeText(MainActivity.this,
+                    "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
+                    .show();
+        }
+    }
+
+    private void closeRFID() {
+        // 扫描中 则关闭
+        Awl.ReleaseWakeLock();
+        Comm.stopScan();
+        showlist();
+
+        isScaning = false;
+        Toast.makeText(getApplicationContext(), "关闭了高频识别", Toast.LENGTH_SHORT).show();
+//        btn_scan.setText("电子标签开启");
+    }
+
 //    private void onTouchButton() {
 //        Intent scannerIntent = new Intent(SCN_CUST_ACTION_START);
 //        sendBroadcast(scannerIntent);
@@ -447,37 +472,45 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mp == null) {
-                mp = MediaPlayer.create(MainActivity.this, R.raw.beep2);
-            }
-            if (mp2 == null) {
-                mp2 = MediaPlayer.create(MainActivity.this, R.raw.beep);
-            }
-            if (intent.getAction().equals(SCN_CUST_ACTION_SCODE)) {
-                String message;
-                try {
-                    message = intent.getStringExtra(SCN_CUST_EX_SCODE).toString();
-                    if (!isExists(message)) {
-                        Toast.makeText(MainActivity.this, "扫描成功：" + message, Toast.LENGTH_SHORT).show();
-                        if (mp != null) {
-                            mp.start();
+            if (isRFID) {
+                if (isScaning) {
+                    closeRFID();
+                } else {
+                    startRFID();
+                }
+            } else {
+                if (mp == null) {
+                    mp = MediaPlayer.create(MainActivity.this, R.raw.beep2);
+                }
+                if (mp2 == null) {
+                    mp2 = MediaPlayer.create(MainActivity.this, R.raw.beep);
+                }
+                if (intent.getAction().equals(SCN_CUST_ACTION_SCODE)) {
+                    String message;
+                    try {
+                        message = intent.getStringExtra(SCN_CUST_EX_SCODE).toString();
+                        if (!isExists(message)) {
+                            Toast.makeText(MainActivity.this, "扫描成功：" + message, Toast.LENGTH_SHORT).show();
+                            if (mp != null) {
+                                mp.start();
+                            }
+                            InventoryBuffer.InventoryTagMap itm = new InventoryBuffer.InventoryTagMap();
+                            itm.strTID = "扫描获得" + scanIndex++;
+                            itm.strEPC = message;
+                            lsTagList.add(itm);
+                            tagListSize = lsTagList.size();
+                            tv_tags.setText("合计: " + tagListSize + " 个");
+                            showlist();
+                        } else {
+                            if (mp2 != null) {
+                                mp2.start();
+                            }
+                            Toast.makeText(MainActivity.this, "该条码" + message + "已存在，无需重复扫描", Toast.LENGTH_SHORT).show();
                         }
-                        InventoryBuffer.InventoryTagMap itm = new InventoryBuffer.InventoryTagMap();
-                        itm.strTID = "扫描获得" + scanIndex++;
-                        itm.strEPC = message;
-                        lsTagList.add(itm);
-                        tagListSize = lsTagList.size();
-                        tv_tags.setText("合计: " + tagListSize + " 个");
-                        showlist();
-                    } else {
-                        if (mp2 != null) {
-                            mp2.start();
-                        }
-                        Toast.makeText(MainActivity.this, "该条码" + message + "已存在，无需重复扫描", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.e("TAG_ER", e.toString());
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e("TAG_ER", e.toString());
                 }
             }
         }
