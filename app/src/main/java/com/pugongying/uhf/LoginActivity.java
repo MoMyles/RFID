@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -20,7 +21,7 @@ import cn.trinea.android.common.util.ToastUtils;
 
 public class LoginActivity extends AppCompatActivity {
 
-
+    private TextView tvSetting;
     private Button btn1;
     private EditText et1, et2;
     private LoadingDialog dialog;
@@ -31,8 +32,8 @@ public class LoginActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
-
         dialog = LoadingDialog.newInstance();
+        tvSetting = findViewById(R.id.tv_setting);
         btn1 = findViewById(R.id.btn1);
         et1 = findViewById(R.id.et1);
         et2 = findViewById(R.id.et2);
@@ -72,6 +73,14 @@ public class LoginActivity extends AppCompatActivity {
                         ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
                     }
                 }).execute("Login", param);
+            }
+        });
+
+        tvSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(LoginActivity.this, SettingActivity.class);
+                startActivity(i);
             }
         });
     }

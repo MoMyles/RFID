@@ -15,7 +15,8 @@ import java.util.Set;
 
 public class NetUtil {
 //    public static String NET_ADDRESS = "http://47.97.201.219:8668/wm/WebService/WebRFID.asmx";
-    public static String NET_ADDRESS = "http://192.168.1.89:8008/RFID/webservice/webrfid.asmx";
+//    public static String NET_ADDRESS = "http://192.168.1.89:8008/RFID/webservice/webrfid.asmx";
+    public static String NET_ADDRESS = "http://106.15.182.143:6008/RFID/WebService/WebRFID.asmx";
     private static final String NAMESPACE = "http://tempuri.org/";
 
     private static Object get(String method, Map<String, String> params) {

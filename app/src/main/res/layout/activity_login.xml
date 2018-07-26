@@ -52,11 +52,11 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
+                android:background="@drawable/input_bg"
                 android:inputType="text"
-                android:textSize="16sp"
                 android:padding="4dp"
                 android:text="001"
-                android:background="@drawable/input_bg" />
+                android:textSize="16sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -77,11 +77,11 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:textSize="16sp"
+                android:background="@drawable/input_bg"
+                android:inputType="textPassword"
                 android:padding="4dp"
                 android:text="1234"
-                android:inputType="textPassword"
-                android:background="@drawable/input_bg" />
+                android:textSize="16sp" />
         </LinearLayout>
 
         <Button
@@ -97,13 +97,15 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tv_setting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="16dp"
-        android:text="浙江蒲公英信息技术有限公司 版权所有"
+        android:layout_marginRight="16dp"
+        android:text="设置"
         android:textColor="@android:color/darker_gray"
-        android:textSize="10sp"
-        android:visibility="gone"/>
+        android:textSize="14sp" />
 </RelativeLayout>

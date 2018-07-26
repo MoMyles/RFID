@@ -62,8 +62,6 @@
                 android:layout_toRightOf="@id/tv1"
                 android:background="@drawable/input_bg"
                 android:hint="请输入访问API地址"
-                android:maxLines="1"
-                android:minLines="1"
                 android:padding="8dp"
                 android:textColor="#000"
                 android:textSize="14sp" />

@@ -117,7 +117,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="48dp"
-        android:background="@drawable/btn_circle"
+        android:background="@drawable/btn_selector"
         android:text="查询"
         android:textColor="@android:color/black"
         android:textSize="16sp" />

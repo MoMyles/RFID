@@ -19,7 +19,7 @@ import java.util.List;
 
 public class SettingActivity extends AppCompatActivity {
 
-    private static final String[] SPIPOW = {"500", "600", "700", "800", "900", "1000", "1100",
+    private static final String[] SPIPOW = new String[]{"500", "600", "700", "800", "900", "1000", "1100",
             "1200", "1300", "1400", "1500", "1600", "1700", "1800", "1900",
             "2000", "2100", "2200", "2300", "2400", "2500", "2600", "2700",
             "2800", "2900", "3000"};
@@ -35,10 +35,13 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
         onBindView(savedInstanceState);
-        init();
     }
 
-    private void init() {
+    private void onBindView(Bundle savedInstanceState) {
+        et1 = findViewById(R.id.et1);
+        tvBack = findViewById(R.id.tv_back);
+        spinner = findViewById(R.id.spinner);
+
         et1.setText(PrefsUtil.get(this, "url", NetUtil.NET_ADDRESS));
         et1.addTextChangedListener(new TextWatcher() {
             @Override
@@ -65,24 +68,18 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
         dataList = Arrays.asList(SPIPOW);
-        adapter = new ArrayAdapter<>(this, R.layout.item_spinner, R.id.tv_name, dataList);
-        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
-        int position = adapter.getPosition(PrefsUtil.get(this, "power", "1500"));
-        spinner.setAdapter(adapter);
-        spinner.setSelection(position);
-        spinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String item = (String) parent.getAdapter().getItem(position);
-                PrefsUtil.set(getApplicationContext(), "power", item);
-            }
-        });
-    }
-
-    private void onBindView(Bundle savedInstanceState) {
-        et1 = findViewById(R.id.et1);
-        tvBack = findViewById(R.id.tv_back);
-        spinner = findViewById(R.id.spinner);
+//        adapter = new ArrayAdapter<>(this, R.layout.item_spinner, R.id.tv_name, dataList);
+//        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
+//        int position = adapter.getPosition(PrefsUtil.get(this, "power", "1500"));
+//        spinner.setAdapter(adapter);
+//        spinner.setSelection(position);
+//        spinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                String item = (String) parent.getAdapter().getItem(position);
+//                PrefsUtil.set(getApplicationContext(), "power", item);
+//            }
+//        });
     }
 
 }

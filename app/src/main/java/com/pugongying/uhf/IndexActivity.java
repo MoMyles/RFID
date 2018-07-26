@@ -38,12 +38,8 @@ public class IndexActivity extends AppCompatActivity implements View.OnClickList
             EventBus.getDefault().register(this);
         }
 
-        mTvBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        mTvBack = findViewById(R.id.tv_back);
+        mTvBack.setOnClickListener(this);
 
         mBtnSearch = findViewById(R.id.btn_search);
         mBtnSearch.setOnClickListener(this);
@@ -60,6 +56,9 @@ public class IndexActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.tv_back:
+                finish();
+                break;
             case R.id.btn_search:
                 doSearch();
                 break;
