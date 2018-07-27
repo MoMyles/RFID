@@ -371,15 +371,15 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //            }
 //        });
         // 设置功率
-//        try {
-//            Comm.opeT = Comm.operateType.setPower;
-//            String powerValueStr = PrefsUtil.get(this, "power", "1500");
-//            Comm.setAntPower(Integer.valueOf(powerValueStr), 0, 0, 0);
-//        } catch (Exception e) {
-//            Toast.makeText(getApplicationContext(),
-//                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
-//                    .show();
-//        }
+        try {
+            Comm.opeT = Comm.operateType.setPower;
+            String powerValueStr = PrefsUtil.get(this, "power", "25");
+            Comm.setAntPower(Integer.valueOf(powerValueStr), 0, 0, 0);
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(),
+                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
+                    .show();
+        }
         // Register receiver
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);

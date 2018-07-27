@@ -68,18 +68,16 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
         dataList = Arrays.asList(SPIPOW);
-//        adapter = new ArrayAdapter<>(this, R.layout.item_spinner, R.id.tv_name, dataList);
-//        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
-//        int position = adapter.getPosition(PrefsUtil.get(this, "power", "1500"));
-//        spinner.setAdapter(adapter);
-//        spinner.setSelection(position);
-//        spinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                String item = (String) parent.getAdapter().getItem(position);
-//                PrefsUtil.set(getApplicationContext(), "power", item);
-//            }
-//        });
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, dataList);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(Integer.valueOf(PrefsUtil.get(this, "power", "25")));
+        spinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                PrefsUtil.set(getApplicationContext(), "power", spinner.getSelectedItemPosition() + "");
+            }
+        });
     }
 
 }
