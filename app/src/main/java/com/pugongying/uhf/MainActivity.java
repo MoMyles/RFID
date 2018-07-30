@@ -472,13 +472,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (isRFID) {
-                if (isScaning) {
-                    closeRFID();
-                } else {
-                    startRFID();
-                }
-            } else {
+            if (!isRFID) {
                 if (mp == null) {
                     mp = MediaPlayer.create(MainActivity.this, R.raw.beep2);
                 }
@@ -512,6 +506,8 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                         Log.e("TAG_ER", e.toString());
                     }
                 }
+            } else {
+                ToastUtils.show(getApplicationContext(), "当前为电子标签模式，请切换模式");
             }
         }
     };
@@ -772,10 +768,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     /* 释放按键事件 */
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (scanCode == 261 && isrun)
-            btn_scan.performClick();
-        else if (scanCode == 261 && !isrun)
-            btn_scan.performClick();
+        if (scanCode == 261 && isRFID && isrun)
+            startRFID();
+        else if (scanCode == 261 && isRFID && !isrun)
+            closeRFID();
         return super.onKeyUp(keyCode, event);
     }
 
