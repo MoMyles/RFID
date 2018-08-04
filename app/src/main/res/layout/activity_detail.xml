@@ -15,10 +15,10 @@
             android:id="@+id/tv_back"
             android:layout_width="60dp"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="16dp"
+            android:gravity="center"
             android:text="返回"
             android:textColor="#fff"
             android:textSize="14sp" />
@@ -35,10 +35,10 @@
             android:id="@+id/tv_complete"
             android:layout_width="60dp"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="16dp"
+            android:gravity="center"
             android:text="保存"
             android:textColor="#fff"
             android:textSize="14sp" />
@@ -71,6 +71,7 @@
                 android:id="@+id/btn_clean"
                 android:layout_width="64dp"
                 android:layout_height="32dp"
+                android:layout_centerVertical="true"
                 android:background="@drawable/btn_selector"
                 android:text="清空"
                 android:textColor="@android:color/black"
@@ -80,6 +81,7 @@
                 android:id="@+id/btn_detail"
                 android:layout_width="72dp"
                 android:layout_height="32dp"
+                android:layout_centerVertical="true"
                 android:layout_marginLeft="8dp"
                 android:layout_toRightOf="@id/btn_clean"
                 android:background="@drawable/btn_selector"
@@ -92,6 +94,7 @@
                 android:layout_width="128dp"
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
                 android:layout_gravity="right"
                 android:background="@drawable/btn_selector"
                 android:text="开启条码扫描"
@@ -99,7 +102,25 @@
                 android:textSize="16sp" />
         </RelativeLayout>
 
+        <LinearLayout
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="电子标签状态" />
+
+            <ImageView
+                android:id="@+id/iv_status"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginLeft="8dp"
+                android:src="@drawable/circle_red" />
+        </LinearLayout>
     </RelativeLayout>
 
     <android.support.v7.widget.RecyclerView

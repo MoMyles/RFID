@@ -62,7 +62,7 @@ public class RFIDAdapter extends RecyclerView.Adapter<RFIDAdapter.V> {
                 public void onClick(View v) {
                     datas.remove(oo);
                     notifyDataSetChanged();
-                    EventBus.getDefault().post(new MessageEvent(0x33));
+                    EventBus.getDefault().post(new MessageEvent(0x33, oo.getMap()));
                 }
             });
             holder.btn1.setVisibility(View.VISIBLE);

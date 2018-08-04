@@ -45,11 +45,7 @@ public class ListActivity extends AppCompatActivity {
         rvList.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         adapter = new ListAdapter(this, datas);
         rvList.setAdapter(adapter);
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
         doRequest();
     }
 

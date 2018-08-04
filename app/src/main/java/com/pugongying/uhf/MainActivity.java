@@ -1,6 +1,7 @@
 package com.pugongying.uhf;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,9 +36,8 @@ import com.pugongying.uhf.util.PrefsUtil;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
 import com.uhf.uhf.Common.InventoryBuffer;
-import com.uhf.uhf.UHF1.UHF001;
-import com.uhf.uhf.UHF1Function.AndroidWakeLock;
-import com.uhf.uhf.UHF1Function.SPconfig;
+import com.uhf.uhf.UHF1.UHF1Function.AndroidWakeLock;
+import com.uhf.uhf.UHF1.UHF1Function.SPconfig;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -47,20 +48,20 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.trinea.android.common.util.ToastUtils;
 
 import static com.uhf.uhf.Common.Comm.Awl;
 import static com.uhf.uhf.Common.Comm.checkDevice;
 import static com.uhf.uhf.Common.Comm.context;
-import static com.uhf.uhf.Common.Comm.isQuick;
 import static com.uhf.uhf.Common.Comm.isrun;
 import static com.uhf.uhf.Common.Comm.lsTagList;
 import static com.uhf.uhf.Common.Comm.myapp;
-import static com.uhf.uhf.Common.Comm.rfidOperate;
+import static com.uhf.uhf.Common.Comm.operateType.nullOperate;
 import static com.uhf.uhf.Common.Comm.soundPool;
 import static com.uhf.uhf.Common.Comm.tagListSize;
-import static com.uhf.uhf.UHF1.UHF001.UHF1handler;
 
 
 //import com.supoin.wireless.WirelessManager;
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public static final String SCN_CUST_ACTION_START = "android.intent.action.SCANNER_BUTTON_DOWN";
     public static final String SCN_CUST_ACTION_CANCEL = "android.intent.action.SCANNER_BUTTON_UP";
 
+    private ImageView iv_status;
     private TextView tv_tags, tv_back, tv_complete;
     private Button btn_scan, btn_clean, btn_detail;
     private RecyclerView rv_list;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     private boolean isScaning = false;// 是否在进行高频率识别
     private boolean isShow = false;
     private int scanIndex = 0;
+    private int luanmaCount = 0;
 
     int scanCode = 0;
 
@@ -91,14 +94,37 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
-        InitDevice();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                InitDevice();
+//                pd.dismiss();
+//                 设置功率
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Comm.opeT = Comm.operateType.setPower;
+                            String powerValueStr = PrefsUtil.get(MainActivity.this, "power", "25");
+                            Comm.setAntPower(Integer.parseInt(powerValueStr), 0, 0, 0);
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
+                }, 600);
+            }
+        }, 600);
     }
+
 
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
         release();
     }
+
 
     @SuppressLint("HandlerLeak")
     public Handler uhfhandler = new Handler() {
@@ -108,10 +134,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             try {
                 tagListSize = lsTagList.size();
                 Bundle bd = msg.getData();
-
-                if (tagListSize > 0) {
-                    showlist();
-                }
+                showlist();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -124,21 +147,22 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         @Override
         public void handleMessage(Message msg) {
             try {
-                UHF001.mhandler = uhfhandler;
-                if (null != rfidOperate)
-                    rfidOperate.mHandler = uhfhandler;
-                if (null != Comm.uhf6)
-                    Comm.uhf6.UHF6handler = uhfhandler;
+                //                UHF001.mhandler = uhfhandler;
+//                if (null != rfidOperate) {
+//                    rfidOperate.mHandler = uhfhandler;
+//                    cb_is6btag.setEnabled(true);
+//                }
+//                if (null != Comm.uhf6)
+//                    Comm.uhf6.UHF6handler = uhfhandler;
+                Comm.mInventoryHandler = uhfhandler;
 
                 Bundle bd = msg.getData();
                 String strMsg = bd.get("Msg").toString();
-                if (TextUtils.isEmpty(strMsg)) {
-                    Log.e("connectH", "模块初始化失败");
+                if (!TextUtils.isEmpty(strMsg)) {
+                    Comm.SetInventoryTid(false);
+
                 }
-//                if (!TextUtils.isEmpty(strMsg)) {
-//                    tv_state.setText(strMsg);
-//                } else
-//                    tv_state.setText("模块初始化失败");
+
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -146,6 +170,8 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             }
         }
     };
+
+    private ProgressDialog pd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,6 +192,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             EventBus.getDefault().register(this);
         }
         btn_scan = findViewById(R.id.btn_scan);
+        iv_status = findViewById(R.id.iv_status);
         btn_clean = findViewById(R.id.btn_clean);
         btn_detail = findViewById(R.id.btn_detail);
         tv_back = findViewById(R.id.tv_back);
@@ -292,9 +319,14 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
                     return;
                 }
+                if (isShow) {
+                    ToastUtils.show(getApplicationContext(), "请先取消查看!");
+                    return;
+                }
                 dataList.clear();
                 lsTagList.clear();
                 tagListSize = 0;
+                luanmaCount = 0;
                 rfidAdapter.notifyDataSetChanged();
                 tv_tags.setText("合计: 0 个");
             }
@@ -303,7 +335,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         btn_detail.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isScaning) {
+                if (!isShow && isScaning) {
                     ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
                     return;
                 }
@@ -370,19 +402,15 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //                showlist();
 //            }
 //        });
-        // 设置功率
-        try {
-            Comm.opeT = Comm.operateType.setPower;
-            String powerValueStr = PrefsUtil.get(this, "power", "25");
-            Comm.setAntPower(Integer.valueOf(powerValueStr), 0, 0, 0);
-        } catch (Exception e) {
-            Toast.makeText(getApplicationContext(),
-                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
-                    .show();
-        }
+
         // Register receiver
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
+
+        pd = new ProgressDialog(MainActivity.this);
+        pd.setCanceledOnTouchOutside(false);
+        pd.setMessage("初始化中......");
+        pd.show();
 //        button_set.setOnTouchListener(new View.OnTouchListener() {
 //            @Override
 //            public boolean onTouch(View v, MotionEvent event) {
@@ -432,12 +460,17 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 //                        startTimerTask();
 //                        button_clean.performClick();
 //                        tv_state.setText("开始读取...");
+            dataList.clear();
+            lsTagList.clear();
+            tagListSize = 0;
+            luanmaCount = 0;
             Awl.WakeLock();
             Comm.startScan();
             isScaning = true;
 //            btn_scan.setText("电子标签关闭");
 //                        ReadHandleUI();
-            Toast.makeText(getApplicationContext(), "开启了高频识别", Toast.LENGTH_SHORT).show();
+            iv_status.setImageResource(R.drawable.circle_green);
+//            Toast.makeText(getApplicationContext(), "开启了高频识别", Toast.LENGTH_SHORT).show();
         } catch (Exception ex) {
             Toast.makeText(MainActivity.this,
                     "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
@@ -452,7 +485,8 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         showlist();
 
         isScaning = false;
-        Toast.makeText(getApplicationContext(), "关闭了高频识别", Toast.LENGTH_SHORT).show();
+        iv_status.setImageResource(R.drawable.circle_red);
+//        Toast.makeText(getApplicationContext(), "关闭了高频识别", Toast.LENGTH_SHORT).show();
 //        btn_scan.setText("电子标签开启");
     }
 
@@ -617,22 +651,57 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     public void InitDevice() {
         Comm.repeatSound = false;
-        Comm.rfidSleep = 100;
+//        Comm.rfidSleep = 10;
         Comm.app = getApplication();
         Comm.spConfig = new SPconfig(this);
+
         context = MainActivity.this;
         soundPool = new SoundPool(10, AudioManager.STREAM_SYSTEM, 5);
         soundPool.load(this, R.raw.beep51, 1);
 
         checkDevice();
-        if (!Comm.powerUp()) {
-            Comm.powerDown();
-            Toast.makeText(MainActivity.this, R.string.powerUpFalse,
-                    Toast.LENGTH_SHORT).show();
-        }
+
+        Comm.initWireless(Comm.app);
         Comm.connecthandler = connectH;
+        Comm.mOtherHandler = opeHandler;
         Comm.Connect();
     }
+
+    @SuppressLint("HandlerLeak")
+    private android.os.Handler opeHandler = new android.os.Handler() {
+        @SuppressWarnings({"unchecked", "unused"})
+        @Override
+        public void handleMessage(Message msg) {
+            try {
+                Bundle b;
+                switch (Comm.opeT) {
+                    case setPower:
+                        b = msg.getData();
+                        boolean isSetPower = b.getBoolean("isSetPower");
+                        if (isSetPower)
+                            Toast.makeText(getApplicationContext(),
+                                    "功率设置成功", Toast.LENGTH_SHORT)
+                                    .show();
+                        else
+                            Toast.makeText(getApplicationContext(),
+                                    "功率设置失败", Toast.LENGTH_SHORT)
+                                    .show();
+                        if (Comm.setParameters()) {
+                            Comm.isQuick = false;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Comm.opeT = nullOperate;
+            if (pd != null && pd.isShowing()) {
+                pd.dismiss();
+            }
+        }
+    };
 
 //    String[] Coname = new String[]{"NO", "                    EPC ID ", "Count"};
 
@@ -640,25 +709,53 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public void onEvent(MessageEvent messageEvent) {
         switch (messageEvent.getType()) {
             case 0x33:
+                lsTagList.remove(messageEvent.getData());
                 tagListSize = lsTagList.size();
                 tv_tags.setText("合计: " + tagListSize + " 个");
                 break;
         }
     }
 
+    private boolean isExists(InventoryBuffer.InventoryTagMap map) {
+        for (ScanEntity se : dataList) {
+            if (se.getMap().strEPC.equals(map.strEPC)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void showlist() {
         if (tagListSize > 0) {
-            dataList.clear();
+            Pattern pattern = Pattern.compile("^[0-9A-Za-z]+$");
             for (int i = 0; i < tagListSize; i++) {
-                dataList.add(new ScanEntity(lsTagList.get(i)));
+                InventoryBuffer.InventoryTagMap map = lsTagList.get(i);
+                if (!isExists(map)) {
+                    String decode = CodeUtil.getDecodeStr(map);
+                    Matcher matcher = pattern.matcher(decode);
+                    if (matcher.find()) {
+                        dataList.add(new ScanEntity(map));
+                    } else {
+                        luanmaCount++;
+                    }
+                }
             }
-            tv_tags.setText("合计: " + tagListSize + " 个");
+        } else {
+            luanmaCount = 0;
         }
-        if (isQuick && !Comm.isrun) {
+        tv_tags.setText("合计: " + (tagListSize - luanmaCount) + " 个");
+//        if (isQuick && !Comm.isrun) {
 //                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
-        }
+//        }
         rfidAdapter.notifyDataSetChanged();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                rv_list.scrollToPosition(rfidAdapter.getItemCount() - 1);
+            }
+        }, 400);
 //        try {
 //            int index = 1;
 //            int ReadCnt = 0;//个数
@@ -750,27 +847,20 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             }
             return true;
         }
+        scanCode = event.getScanCode();
+        if (scanCode == 261 && isRFID && !isrun) {
+            startRFID();
+        }
         return super.onKeyDown(keyCode, event);
     }
 
-    public void release() {
-        if (null != UHF1handler)
-            Comm.stopScan();
-        if (null != myapp.Mreader)
-            myapp.Mreader.CloseReader();
-        if (null != myapp.Rpower)
-            myapp.Rpower.PowerDown();
-        if (null != Comm.baseTabFragment.mReader) {
-            Comm.baseTabFragment.mReader.free();
-        }
-        Comm.powerDown();
-    }
 
     /* 释放按键事件 */
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        scanCode = event.getScanCode();
+//        if (scanCode == 261 && isRFID && !isrun)
+//            startRFID();
         if (scanCode == 261 && isRFID && isrun)
-            startRFID();
-        else if (scanCode == 261 && isRFID && !isrun)
             closeRFID();
         return super.onKeyUp(keyCode, event);
     }
@@ -787,5 +877,13 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         }
     }
 
-
+    public void release() {
+        try {
+            if (isrun)
+                Comm.stopScan();
+            Comm.powerDown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

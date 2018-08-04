@@ -13,19 +13,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.pugongying.uhf.util.PrefsUtil;
+import com.uhf.uhf.Common.Comm;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class SettingActivity extends AppCompatActivity {
 
-    private static final String[] SPIPOW = new String[]{"500", "600", "700", "800", "900", "1000", "1100",
-            "1200", "1300", "1400", "1500", "1600", "1700", "1800", "1900",
-            "2000", "2100", "2200", "2300", "2400", "2500", "2600", "2700",
-            "2800", "2900", "3000"};
-
     private ArrayAdapter<String> adapter;
-    private List<String> dataList;
     private Spinner spinner;
     private EditText et1;
     private TextView tvBack;
@@ -67,15 +62,19 @@ public class SettingActivity extends AppCompatActivity {
                 finish();
             }
         });
-        dataList = Arrays.asList(SPIPOW);
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, dataList);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, Comm.spipow);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setSelection(Integer.valueOf(PrefsUtil.get(this, "power", "25")));
-        spinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 PrefsUtil.set(getApplicationContext(), "power", spinner.getSelectedItemPosition() + "");
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
             }
         });
     }

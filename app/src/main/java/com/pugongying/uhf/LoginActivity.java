@@ -59,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (obj != null) {
                                 SharedPreferences sp = getSharedPreferences("pgy_rfid", MODE_PRIVATE);
                                 sp.edit().putString("UserCode", obj.getString("UserCode")).apply();
-                                startActivity(new Intent(LoginActivity.this, IndexActivity.class));
+                                startActivity(new Intent(LoginActivity.this, MenuActivity.class));
                             } else {
                                 ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
                             }
