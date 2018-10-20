@@ -1,12 +1,12 @@
 package com.pugongying.uhf;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
@@ -24,14 +24,14 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.pugongying.uhf.adapter.RFIDAdapter;
+import com.pugongying.uhf.adapter.MoveAdapter;
 import com.pugongying.uhf.util.PrefsUtil;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
@@ -65,7 +65,7 @@ import static com.uhf.uhf.Common.Comm.tagListSize;
 
 
 //import com.supoin.wireless.WirelessManager;
-public class MainActivity extends AppCompatActivity { // ActionBarActivity
+public class MoveActivity extends AppCompatActivity { // ActionBarActivity
 
     // 读线程：
     public static final String SCN_CUST_ACTION_SCODE = "com.android.server.scannerservice.broadcast";
@@ -74,15 +74,15 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     public static final String SCN_CUST_ACTION_START = "android.intent.action.SCANNER_BUTTON_DOWN";
     public static final String SCN_CUST_ACTION_CANCEL = "android.intent.action.SCANNER_BUTTON_UP";
 
-    private ImageView iv_status;
-    private TextView tv_tags, tv_back, tv_complete;
-    private Button btn_scan, btn_clean, btn_detail;
+    private TextView tv_back, tv_complete;
+    private Button btn_scan, btn_clear, btn_search2;
+    private EditText et_kw, et_tm;
     private RecyclerView rv_list;
-    private final List<ScanEntity> dataList = new ArrayList();
+    private final List<JSONObject> dataList = new ArrayList();
 
 
-    private RFIDAdapter rfidAdapter;
-    private boolean isRFID = true;// 默认高频识别
+    private MoveAdapter adapter;
+    private boolean isRFID = false;// 是否为电子扫描状态 默认红外扫描
     private boolean isScaning = false;// 是否在进行高频率识别
     private boolean isShow = false;
     private int scanIndex = 0;
@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     public void run() {
                         try {
                             Comm.opeT = Comm.operateType.setPower;
-                            String powerValueStr = PrefsUtil.get(MainActivity.this, "power", "25");
+                            String powerValueStr = PrefsUtil.get(MoveActivity.this, "power", "25");
                             Comm.setAntPower(Integer.parseInt(powerValueStr), 0, 0, 0);
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(),
@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         }
     };
 
+    // 设备连接电子扫描硬件消息结果处理
     @SuppressLint("HandlerLeak")
     public Handler connectH = new Handler() {
         @Override
@@ -153,7 +154,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 String strMsg = bd.get("Msg").toString();
                 if (!TextUtils.isEmpty(strMsg)) {
                     Comm.SetInventoryTid(false);
-
                 }
 
 
@@ -173,17 +173,19 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
         QMUIStatusBarHelper.translucent(this);
 
-        setContentView(R.layout.activity_detail);
+        setContentView(R.layout.activity_move);
 
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-        btn_scan = findViewById(R.id.btn_scan);
-        iv_status = findViewById(R.id.iv_status);
-        btn_clean = findViewById(R.id.btn_clean);
-        btn_detail = findViewById(R.id.btn_detail);
-        tv_back = findViewById(R.id.tv_back);
-        tv_complete = findViewById(R.id.tv_complete);
+        btn_scan = findViewById(R.id.btn_scan);// 开启电子标签按钮
+        btn_clear = findViewById(R.id.btn_clear);// 清空按钮
+        btn_search2 = findViewById(R.id.btn_search2);// 确定按钮
+        tv_back = findViewById(R.id.tv_back);// 返回按钮
+        tv_complete = findViewById(R.id.tv_complete);// 右上角确定按钮
+        et_kw = findViewById(R.id.et_kw);
+        et_tm = findViewById(R.id.et_tm);
+        // 返回按钮点击事件
         tv_back.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -194,32 +196,32 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 }
             }
         });
+        // 右上角确定按钮点击事件
         tv_complete.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isScaning) {
-                    Toast.makeText(getApplicationContext(), "请先关闭电子标签", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "请先关闭电子扫描", Toast.LENGTH_SHORT).show();
                 } else {
-                    // 1.16进制转ASCII值
-                    // 2.ASCII值在找对应的数字字母
-                    Bundle bundle = getIntent().getExtras();
-                    if (bundle != null) {
-                        //{"申请编码":"0000000002","客户":"PANASH","申请人":"admin","领用数量":0.00,"状态":"未扫描"}
-                        // Map<String, Object> data = (Map<String, Object>) bundle.getSerializable("data");
-                        String soId = getIntent().getStringExtra("soId");
-                        if (!TextUtils.isEmpty(soId)) {
-                            //SoID 申请编码
-                            //Takeman 联系人
-                            //customNo
-                            //customName 客户名 客户ID
-                            //ContactNumber 联系电话
-                            //strDetail 产品号◆产品号◆产品号◆产品号◆产品号
-                            //remark 备注
+                    final View view = getLayoutInflater().inflate(R.layout.dialog_move_new_kw, null);
+                    final EditText etKw = view.findViewById(R.id.et);
+                    final Button btn = view.findViewById(R.id.btn);
+                    final AlertDialog ad = new AlertDialog.Builder(MoveActivity.this)
+                            .setView(view)
+                            .setCancelable(false)
+                            .create();
+                    btn.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            final String kw = etKw.getText().toString().trim();
+                            if (TextUtils.isEmpty(kw)) {
+                                ToastUtils.show(getApplicationContext(), "新库位不能为空");
+                                return;
+                            }
+                            // 库位更新
                             Map<String, Object> param = new HashMap<>();
-                            SharedPreferences sp = getSharedPreferences("pgy_rfid", MODE_PRIVATE);
-                            param.put("UserCode", sp.getString("UserCode", ""));
-                            param.put("SoID", soId);
-                            param.put("strDetail", getData());
+                            param.put("positionNo", kw);
+                            param.put("P_Code", getData());
                             final LoadingDialog dialog = LoadingDialog.newInstance();
                             dialog.show(getSupportFragmentManager(), "save");
                             new NetUtil.NetTask().listen(new NetUtil.NetListener() {
@@ -230,11 +232,12 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                                     if (array != null && array.size() > 0) {
                                         JSONObject obj = array.getJSONObject(0);
                                         if (obj != null) {
-                                            if (obj.getIntValue("succ") == 0) {
-                                                ToastUtils.show(getApplicationContext(), "保存成功");
+                                            if (!"fail".equals(obj.getString("status"))) {
+                                                ToastUtils.show(getApplicationContext(), "移位成功");
+                                                ad.dismiss();
                                                 finish();
                                             } else {
-                                                ToastUtils.show(getApplicationContext(), obj.getString("msg"));
+                                                ToastUtils.show(getApplicationContext(), obj.getString("reason"));
                                             }
                                         } else {
                                             ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
@@ -252,30 +255,76 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                                     if (dialog.isVisible()) {
                                         dialog.dismiss();
                                     }
+                                    ad.dismiss();
                                     ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
                                 }
-                            }).execute("Smp_applyoutAdd_RFID", param);
-
-                        } else {
-                            Toast.makeText(getApplicationContext(), "此领样单有问题, 请找相关人员确认!", Toast.LENGTH_SHORT).show();
+                            }).execute("movePosition", param);
                         }
-                    } else {
-                        Toast.makeText(getApplicationContext(), "此领样单有问题, 请找相关人员确认!", Toast.LENGTH_SHORT).show();
-                    }
+                    });
+                    ad.show();
                 }
             }
         });
-        tv_tags = (TextView) findViewById(R.id.textView_readallcnt);
+        // 确定按钮事件
+        btn_search2.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isScaning) {
+                    ToastUtils.show(getApplicationContext(), "请先关闭电子扫描");
+                    return;
+                }
+                Map<String, String> param = new HashMap<>();
+                final String positionNo = et_kw.getText().toString().trim();
+                final String barCode = et_tm.getText().toString().trim();
+                param.put("positionNo", positionNo);
+                param.put("barCode", barCode);
+
+                new NetUtil.NetTask().listen(new NetUtil.NetListener() {
+                    @Override
+                    public void success(String data) {
+                        //[{"UserCode":"001 ","Name":"admin ","Depart":"总经办","chnCorpName":"绍兴极绎外贸有限公司"
+                        // ,"engCorpName":"SHAOXING GE","LoginKey":"F9A8926C7AA146BAA67EFE8BFE947941"}]
+                        try {
+                            JSONArray array = JSON.parseArray(data);
+                            if (array != null && !array.isEmpty()) {
+                                dataList.clear();
+                                for (int i = 0; i < array.size(); i++) {
+                                    dataList.add(array.getJSONObject(i));
+                                }
+                                adapter.notifyDataSetChanged();
+                            } else {
+                                ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
+                            }
+                        } catch (Exception e) {
+                            ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
+                        }
+                    }
+
+                    @Override
+                    public void failure() {
+
+                        ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
+                    }
+                }).execute("getProductByPosition", param);
+            }
+        });
+
         rv_list = findViewById(R.id.rv_list);
         rv_list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         rv_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         if (!lsTagList.isEmpty()) {
             lsTagList.clear();
         }
-        rfidAdapter = new RFIDAdapter(this, dataList);
-        rv_list.setAdapter(rfidAdapter);
+        adapter = new MoveAdapter(this, dataList);
+        rv_list.setAdapter(adapter);
+//        tv_state = (TextView) findViewById(R.id.textView_invstate);
+//        textView_time = (TextView) findViewById(R.id.textView_time);
+//        textView_time.setText("00:00:00");
 
+//        button_set.setFocusable(false);
+//        tv_state.setText("模块初始化失败");
         Awl = new AndroidWakeLock((PowerManager) getSystemService(Context.POWER_SERVICE));
+
         btn_scan.setOnClickListener(new OnClickListener() {
             @SuppressWarnings("unused")
             @Override
@@ -289,77 +338,24 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     }
                 } else {
                     isRFID = true;
-                    btn_scan.setText("开启条码扫描");
+                    btn_scan.setText("关闭电子标签");
                 }
             }
         });
 
-        btn_clean.setOnClickListener(new OnClickListener() {
+        btn_clear.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (isScaning) {
                     ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
                     return;
                 }
-                if (isShow) {
-                    ToastUtils.show(getApplicationContext(), "请先取消查看!");
-                    return;
-                }
+
                 dataList.clear();
                 lsTagList.clear();
                 tagListSize = 0;
                 luanmaCount = 0;
-                rfidAdapter.notifyDataSetChanged();
-                tv_tags.setText("合计: 0 个");
-            }
-        });
-
-        btn_detail.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!isShow && isScaning) {
-                    ToastUtils.show(getApplicationContext(), "扫描中，请先关闭电子标签!");
-                    return;
-                }
-                if (isShow) {
-                    isShow = false;
-                    btn_detail.setText("查看详情");
-                    for (ScanEntity se : dataList) {
-                        se.setShow(false);
-                    }
-                    rfidAdapter.notifyDataSetChanged();
-                } else {
-                    isShow = true;
-                    btn_detail.setText("取消查看");
-                    Map<String, Object> param = new HashMap<>();
-
-                    param.put("barcode", getData());
-                    new NetUtil.NetTask().listen(new NetUtil.NetListener() {
-                        @Override
-                        public void success(String data) {
-                            //[{"条码":"0000018923","产品号":"ADK-JQ-3901B        ","品名":"全涤条子 ADK-JQ-3901B","规格":""},{"条码":"0000022066","产品号":"CEY014              "
-                            // ,"品名":"200DSSY单面麻","规格":"75D/72FFDY/(30DFDY+30DPOY)×200D/48FSSY"}
-                            // ,{"条码":"0000CRP001","产品号":"CRP001              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP002","产品号":"CRP002              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP003","产品号":"CRP003              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP004","产品号":"CRP004              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP006","产品号":"CRP006              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP007","产品号":"CRP007              ","品名":"乱麻印花","规格":""},{"条码":"0000CRP008","产品号":"CRP008              ","品名":"乱麻印花","规格":""}]
-                            JSONArray array = JSON.parseArray(data);
-                            int size = array == null ? 0 : array.size();
-                            for (ScanEntity se : dataList) {
-                                for (int i = 0; i < size; i++) {
-                                    JSONObject obj = array.getJSONObject(i);
-                                    if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码"))) {
-                                        se.setObj(obj);
-                                    }
-                                }
-                                se.setShow(true);
-                            }
-                            rfidAdapter.notifyDataSetChanged();
-                        }
-
-                        @Override
-                        public void failure() {
-                            ToastUtils.show(getApplicationContext(), "查看详情失败");
-                        }
-                    }).execute("QueryBarcode", param);
-                }
+                adapter.notifyDataSetChanged();
             }
         });
 
@@ -367,22 +363,16 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
 
-        pd = new ProgressDialog(MainActivity.this);
+        pd = new ProgressDialog(MoveActivity.this);
         pd.setCanceledOnTouchOutside(false);
         pd.setMessage("初始化中......");
         pd.show();
-
     }
 
-    /**
-     * 开启高频识别
-     */
     private void startRFID() {
         // 开启扫描
         try {
-//                        startTimerTask();
-//                        button_clean.performClick();
-//                        tv_state.setText("开始读取...");
+
             dataList.clear();
             lsTagList.clear();
             tagListSize = 0;
@@ -390,20 +380,14 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
             Awl.WakeLock();
             Comm.startScan();
             isScaning = true;
-//            btn_scan.setText("电子标签关闭");
-//                        ReadHandleUI();
-            iv_status.setImageResource(R.drawable.circle_green);
-//            Toast.makeText(getApplicationContext(), "开启了高频识别", Toast.LENGTH_SHORT).show();
+
         } catch (Exception ex) {
-            Toast.makeText(MainActivity.this,
+            Toast.makeText(MoveActivity.this,
                     "ERR：" + ex.getMessage(), Toast.LENGTH_SHORT)
                     .show();
         }
     }
 
-    /**
-     * 关闭高频识别
-     */
     private void closeRFID() {
         // 扫描中 则关闭
         Awl.ReleaseWakeLock();
@@ -411,12 +395,11 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         showlist();
 
         isScaning = false;
-        iv_status.setImageResource(R.drawable.circle_red);
 
     }
 
     /**
-     * 红外扫描结果处理广播
+     * 红外扫描结果接收广播
      */
     private BroadcastReceiver mSamDataReceiver = new BroadcastReceiver() {
         private MediaPlayer mp;
@@ -424,38 +407,31 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!isRFID) {
+            if (!isRFID) {// true 则为红外扫描
                 if (mp == null) {
-                    mp = MediaPlayer.create(MainActivity.this, R.raw.beep2);
+                    mp = MediaPlayer.create(MoveActivity.this, R.raw.beep2);
                 }
                 if (mp2 == null) {
-                    mp2 = MediaPlayer.create(MainActivity.this, R.raw.beep);
+                    mp2 = MediaPlayer.create(MoveActivity.this, R.raw.beep);
                 }
                 if (intent.getAction().equals(SCN_CUST_ACTION_SCODE)) {
                     String message;
                     try {
                         message = intent.getStringExtra(SCN_CUST_EX_SCODE).toString();
-                        if (!isExists(message)) {
-                            Toast.makeText(MainActivity.this, "扫描成功：" + message, Toast.LENGTH_SHORT).show();
-                            if (mp != null) {
-                                mp.start();
-                            }
-                            InventoryBuffer.InventoryTagMap itm = new InventoryBuffer.InventoryTagMap();
-                            itm.strTID = "扫描获得" + scanIndex++;
-                            itm.strEPC = message;
-                            lsTagList.add(itm);
-                            tagListSize = lsTagList.size();
-                            tv_tags.setText("合计: " + tagListSize + " 个");
-                            showlist();
-                        } else {
-                            if (mp2 != null) {
-                                mp2.start();
-                            }
-                            Toast.makeText(MainActivity.this, "该条码" + message + "已存在，无需重复扫描", Toast.LENGTH_SHORT).show();
+//                        if (!isExists(message)) {
+                        Toast.makeText(MoveActivity.this, "扫描成功：" + message, Toast.LENGTH_SHORT).show();
+                        if (mp != null) {
+                            mp.start();
                         }
+                        et_tm.setText(message);
+//                        } else {
+//                            if (mp2 != null) {
+//                                mp2.start();
+//                            }
+//                            Toast.makeText(MoveActivity.this, "该条码" + message + "已扫描，无需重复扫描", Toast.LENGTH_SHORT).show();
+//                        }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Log.e("TAG_ER", e.toString());
                     }
                 }
             } else {
@@ -466,26 +442,20 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
 
     private String getData() {
         StringBuffer sb = new StringBuffer();
-        for (InventoryBuffer.InventoryTagMap map : lsTagList) {
+        for (JSONObject obj : dataList) {
             //                    if (!"".equals(sb.toString())){
             //                        sb.append("◆");
             //                    }
-            sb.append(CodeUtil.getDecodeStr(map) + "◆");
+            sb.append(obj.getString("条码") + "◆");
         }
         return sb.toString();
     }
 
-    /**
-     * 红外扫描结果判断是否存在
-     * @param message
-     * @return
-     */
     private boolean isExists(String message) {
         if (!lsTagList.isEmpty()) {
             Iterator<InventoryBuffer.InventoryTagMap> iterator = lsTagList.iterator();
             while (iterator.hasNext()) {
                 InventoryBuffer.InventoryTagMap ibitm = iterator.next();
-//                Log.e("TAG", CodeUtil.getDecodeStr(ibitm) + "-" + message);
                 if (CodeUtil.getDecodeStr(ibitm).equals(message)) {
                     return true;
                 }
@@ -504,16 +474,14 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         }
     }
 
-    /**
-     * 驱动初始化
-     */
+
     public void InitDevice() {
         Comm.repeatSound = false;
 //        Comm.rfidSleep = 10;
         Comm.app = getApplication();
         Comm.spConfig = new SPconfig(this);
 
-        context = MainActivity.this;
+        context = MoveActivity.this;
         soundPool = new SoundPool(10, AudioManager.STREAM_SYSTEM, 5);
         soundPool.load(this, R.raw.beep51, 1);
 
@@ -526,7 +494,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     }
 
     @SuppressLint("HandlerLeak")
-    private android.os.Handler opeHandler = new android.os.Handler() {
+    private Handler opeHandler = new Handler() {
         @SuppressWarnings({"unchecked", "unused"})
         @Override
         public void handleMessage(Message msg) {
@@ -561,7 +529,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         }
     };
 
-
     /**
      * 删除操作,若删除的为高频识别出来的，进行同步删除操作
      * @param messageEvent
@@ -569,22 +536,27 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(MessageEvent messageEvent) {
         switch (messageEvent.getType()) {
-            case 0x33:
+            case 0x34:
                 lsTagList.remove(messageEvent.getData());
                 tagListSize = lsTagList.size();
-                tv_tags.setText("合计: " + tagListSize + " 个");
                 break;
         }
     }
 
     /**
-     * 判断条码是否已存在
+     * 判断列表中是否已存在该条码
+     *
      * @param map
      * @return
      */
     private boolean isExists(InventoryBuffer.InventoryTagMap map) {
-        for (ScanEntity se : dataList) {
-            if (se.getMap().strEPC.equals(map.strEPC)) {
+//        for (ScanEntity se : dataList) {
+//            if (se.getMap().strEPC.equals(map.strEPC)) {
+//                return true;
+//            }
+//        }
+        for (JSONObject data : dataList) {
+            if (data.getString("条码").equals(CodeUtil.getDecodeStr(map))) {
                 return true;
             }
         }
@@ -592,7 +564,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     }
 
     /**
-     * 识别结果显示处理
+     * 扫描结果显示操作
      */
     private void showlist() {
         if (tagListSize > 0) {
@@ -603,7 +575,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                     String decode = CodeUtil.getDecodeStr(map);
                     Matcher matcher = pattern.matcher(decode);
                     if (matcher.find()) {
-                        dataList.add(new ScanEntity(map));
+                        JSONObject obj = new JSONObject();
+                        obj.put("条码", decode);
+                        obj.put("item", map);
+                        dataList.add(obj);
                     } else {
                         luanmaCount++;
                     }
@@ -612,23 +587,23 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         } else {
             luanmaCount = 0;
         }
-        tv_tags.setText("合计: " + (tagListSize - luanmaCount) + " 个");
+
 //        if (isQuick && !Comm.isrun) {
 //                tv_state.setText(String.valueOf("正在处理数据，请稍后。。。"));
 //        }
-        rfidAdapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();
 
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                rv_list.scrollToPosition(rfidAdapter.getItemCount() - 1);
+                rv_list.scrollToPosition(adapter.getItemCount() - 1);
             }
         }, 400);
 
     }
 
     /**
-     * 物理按键按下监听
+     * 物理按键按下
      * @param keyCode
      * @param event
      * @return
@@ -656,7 +631,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     }
 
     /**
-     * 物理按键释放监听
+     * 物理按键释放
      * @param keyCode
      * @param event
      * @return
@@ -683,9 +658,6 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         }
     }
 
-    /**
-     * 释放高频识别资源
-     */
     public void release() {
         try {
             if (isrun)

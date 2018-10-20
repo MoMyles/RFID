@@ -14,7 +14,7 @@ import cn.trinea.android.common.util.ToastUtils;
 
 public class MenuActivity extends AppCompatActivity implements View.OnClickListener {
     private TextView tv1;
-    private Button btn1, btn2;
+    private Button btn1, btn2, btn3;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -32,10 +32,12 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
         tv1 = findViewById(R.id.tv1);
         btn1 = findViewById(R.id.btn1);
         btn2 = findViewById(R.id.btn2);
+        btn3 = findViewById(R.id.btn3);
 
         tv1.setOnClickListener(this);
         btn1.setOnClickListener(this);
         btn2.setOnClickListener(this);
+        btn3.setOnClickListener(this);
     }
 
     @Override
@@ -52,6 +54,9 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn2:
                 ToastUtils.show(this, "暂未开放");
+                break;
+            case R.id.btn3:
+                intent = new Intent(this, MoveActivity.class);
                 break;
         }
         if (intent != null) {
