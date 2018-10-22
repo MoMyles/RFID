@@ -206,10 +206,17 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                     final View view = getLayoutInflater().inflate(R.layout.dialog_move_new_kw, null);
                     final EditText etKw = view.findViewById(R.id.et);
                     final Button btn = view.findViewById(R.id.btn);
+                    final Button btn2 = view.findViewById(R.id.btn2);
                     final AlertDialog ad = new AlertDialog.Builder(MoveActivity.this)
                             .setView(view)
                             .setCancelable(false)
                             .create();
+                    btn2.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ad.dismiss();
+                        }
+                    });
                     btn.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View view) {
