@@ -50,7 +50,7 @@
         android:layout_height="match_parent"
         android:background="#fff"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="8dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -63,7 +63,7 @@
                 android:layout_height="32dp"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:layout_marginLeft="4dp"
+                android:layout_marginLeft="2dp"
                 android:background="@drawable/btn_selector"
                 android:text="清空"
                 android:textColor="@android:color/black"

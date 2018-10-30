@@ -32,6 +32,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.pugongying.uhf.adapter.MoveAdapter;
+import com.pugongying.uhf.util.KeyboardUtil;
 import com.pugongying.uhf.util.PrefsUtil;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.uhf.uhf.Common.Comm;
@@ -276,6 +277,9 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         btn_search2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                et_kw.clearFocus();
+                et_tm.clearFocus();
+                KeyboardUtil.closeKeyboard(MoveActivity.this);
                 if (isScaning) {
                     ToastUtils.show(getApplicationContext(), "请先关闭电子扫描");
                     return;
@@ -538,6 +542,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
 
     /**
      * 删除操作,若删除的为高频识别出来的，进行同步删除操作
+     *
      * @param messageEvent
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -611,6 +616,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
 
     /**
      * 物理按键按下
+     *
      * @param keyCode
      * @param event
      * @return
@@ -639,6 +645,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
 
     /**
      * 物理按键释放
+     *
      * @param keyCode
      * @param event
      * @return

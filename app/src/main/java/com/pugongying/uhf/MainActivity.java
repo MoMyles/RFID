@@ -343,13 +343,17 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                             JSONArray array = JSON.parseArray(data);
                             int size = array == null ? 0 : array.size();
                             for (ScanEntity se : dataList) {
-                                for (int i = 0; i < size; i++) {
-                                    JSONObject obj = array.getJSONObject(i);
-                                    if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码"))) {
-                                        se.setObj(obj);
+                                try {
+                                    for (int i = 0; i < size; i++) {
+                                        JSONObject obj = array.getJSONObject(i);
+                                        if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码"))) {
+                                            se.setObj(obj);
+                                        }
                                     }
+                                    se.setShow(true);
+                                } catch (Exception e){
+                                  e.printStackTrace();
                                 }
-                                se.setShow(true);
                             }
                             rfidAdapter.notifyDataSetChanged();
                         }
