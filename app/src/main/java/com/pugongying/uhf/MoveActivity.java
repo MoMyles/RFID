@@ -100,21 +100,6 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
             public void run() {
                 InitDevice();
 //                pd.dismiss();
-//                 设置功率
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Comm.opeT = Comm.operateType.setPower;
-                            String powerValueStr = PrefsUtil.get(MoveActivity.this, "power", "25");
-                            Comm.setAntPower(Integer.parseInt(powerValueStr), 0, 0, 0);
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(),
-                                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
-                                    .show();
-                        }
-                    }
-                }, 600);
             }
         }, 600);
     }
@@ -157,10 +142,27 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                     Comm.SetInventoryTid(false);
                 }
 
-
+                //                 设置功率
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Comm.opeT = Comm.operateType.setPower;
+                            String powerValueStr = PrefsUtil.get(MoveActivity.this, "power", "25");
+                            Comm.setAntPower(Integer.parseInt(powerValueStr), 0, 0, 0);
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    "功率设置异常:" + e.getMessage(), Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
+                }, 600);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e("connectH", e.getMessage().toString());
+            }
+            if(pd != null && pd.isShowing()){
+                pd.dismiss();
             }
         }
     };
