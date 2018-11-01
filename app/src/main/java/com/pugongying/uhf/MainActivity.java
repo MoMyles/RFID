@@ -377,10 +377,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
 
-        pd = new ProgressDialog(MainActivity.this);
-        pd.setCanceledOnTouchOutside(false);
-        pd.setMessage("初始化中......");
-        pd.show();
+//        pd = new ProgressDialog(MainActivity.this);
+//        pd.setCanceledOnTouchOutside(false);
+//        pd.setMessage("初始化中......");
+//        pd.show();
 
     }
 

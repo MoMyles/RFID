@@ -340,10 +340,10 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
 
-        pd = new ProgressDialog(MoveActivity.this);
-        pd.setCanceledOnTouchOutside(false);
-        pd.setMessage("初始化中......");
-        pd.show();
+//        pd = new ProgressDialog(MoveActivity.this);
+//        pd.setCanceledOnTouchOutside(false);
+//        pd.setMessage("初始化中......");
+//        pd.show();
     }
 
     private void doSearch() {
