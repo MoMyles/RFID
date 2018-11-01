@@ -101,7 +101,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                 InitDevice();
 //                pd.dismiss();
             }
-        }, 200);
+        }, 600);
     }
 
 
@@ -156,7 +156,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                                     .show();
                         }
                     }
-                }, 200);
+                }, 600);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e("connectH", e.getMessage().toString());
