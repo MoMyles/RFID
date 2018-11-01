@@ -101,7 +101,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                 InitDevice();
 //                pd.dismiss();
             }
-        }, 600);
+        }, 200);
     }
 
 
@@ -156,7 +156,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                                     .show();
                         }
                     }
-                }, 600);
+                }, 200);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e("connectH", e.getMessage().toString());
@@ -279,46 +279,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         btn_search2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                et_kw.clearFocus();
-                et_tm.clearFocus();
-                KeyboardUtil.closeKeyboard(MoveActivity.this);
-                if (isScaning) {
-                    ToastUtils.show(getApplicationContext(), "请先关闭电子扫描");
-                    return;
-                }
-                Map<String, String> param = new HashMap<>();
-                final String positionNo = et_kw.getText().toString().trim();
-                final String barCode = et_tm.getText().toString().trim();
-                param.put("positionNo", positionNo);
-                param.put("barCode", barCode);
-
-                new NetUtil.NetTask().listen(new NetUtil.NetListener() {
-                    @Override
-                    public void success(String data) {
-                        //[{"UserCode":"001 ","Name":"admin ","Depart":"总经办","chnCorpName":"绍兴极绎外贸有限公司"
-                        // ,"engCorpName":"SHAOXING GE","LoginKey":"F9A8926C7AA146BAA67EFE8BFE947941"}]
-                        try {
-                            JSONArray array = JSON.parseArray(data);
-                            if (array != null && !array.isEmpty()) {
-                                dataList.clear();
-                                for (int i = 0; i < array.size(); i++) {
-                                    dataList.add(array.getJSONObject(i));
-                                }
-                                adapter.notifyDataSetChanged();
-                            } else {
-                                ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
-                            }
-                        } catch (Exception e) {
-                            ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
-                        }
-                    }
-
-                    @Override
-                    public void failure() {
-
-                        ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
-                    }
-                }).execute("getProductByPosition", param);
+                doSearch();
             }
         });
 
@@ -382,6 +343,52 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         pd.show();
     }
 
+    private void doSearch() {
+        et_kw.clearFocus();
+        et_tm.clearFocus();
+        KeyboardUtil.closeKeyboard(MoveActivity.this);
+        if (isScaning) {
+            ToastUtils.show(getApplicationContext(), "请先关闭电子扫描");
+            return;
+        }
+        Map<String, String> param = new HashMap<>();
+        final String positionNo = et_kw.getText().toString().trim();
+        final String barCode = et_tm.getText().toString().trim();
+        param.put("positionNo", positionNo);
+        param.put("barCode", barCode);
+
+        new NetUtil.NetTask().listen(new NetUtil.NetListener() {
+            @Override
+            public void success(String data) {
+                //[{"UserCode":"001 ","Name":"admin ","Depart":"总经办","chnCorpName":"绍兴极绎外贸有限公司"
+                // ,"engCorpName":"SHAOXING GE","LoginKey":"F9A8926C7AA146BAA67EFE8BFE947941"}]
+                try {
+                    JSONArray array = JSON.parseArray(data);
+                    if (array != null && !array.isEmpty()) {
+                        dataList.clear();
+                        for (int i = 0; i < array.size(); i++) {
+                            dataList.add(array.getJSONObject(i));
+                        }
+                        adapter.notifyDataSetChanged();
+
+                    } else {
+                        ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
+                    }
+                } catch (Exception e) {
+                    ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
+                }
+                et_kw.setText("");
+                et_tm.setText("");
+            }
+
+            @Override
+            public void failure() {
+
+                ToastUtils.show(getApplicationContext(), "服务器异常, 请联系管理员");
+            }
+        }).execute("getProductByPosition", param);
+    }
+
     private void startRFID() {
         // 开启扫描
         try {
@@ -437,6 +444,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                             mp.start();
                         }
                         et_tm.setText(message);
+                        doSearch();
 //                        } else {
 //                            if (mp2 != null) {
 //                                mp2.start();
