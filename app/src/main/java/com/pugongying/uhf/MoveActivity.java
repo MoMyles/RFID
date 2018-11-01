@@ -95,20 +95,23 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                InitDevice();
-//                pd.dismiss();
-            }
-        }, 600);
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                InitDevice();
+////                pd.dismiss();
+//            }
+//        }, 600);
     }
 
 
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-        release();
+        if (isrun) {
+            closeRFID();
+        }
+//        release();
     }
 
 
@@ -561,6 +564,9 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
             case 0x34:
                 lsTagList.remove(messageEvent.getData());
                 tagListSize = lsTagList.size();
+                break;
+            case 0x35:
+                showlist();
                 break;
         }
     }
