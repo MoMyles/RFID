@@ -43,7 +43,7 @@ public class MoveAdapter extends RecyclerView.Adapter<MoveAdapter.V> {
         if (obj != null) {
 
             holder.tv1.setText((position + 1) + "." + "条码: " + obj.getString("条码"));
-            holder.tv2.setText("编码: " + obj.getString("编码"));
+            holder.tv2.setText("编码: " + (obj.getString("编码") == null ? "" : obj.getString("编码")));
 
             holder.btn1.setOnClickListener(new View.OnClickListener() {
                 @Override

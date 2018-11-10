@@ -45,12 +45,21 @@ public class RFIDAdapter extends RecyclerView.Adapter<RFIDAdapter.V> {
         final JSONObject obj = datas.get(position).getObj();
         if (item != null) {
             if ( oo.isShow()) {
-                holder.tv3.setText((position + 1) + "." + "条码:" + obj.getString("条码"));
-                holder.tv4.setText("产品号:" + obj.getString("产品号"));
-                holder.tv5.setText("品名:" + obj.getString("品名"));
-                holder.tv6.setText("规格:" + obj.getString("规格"));
-                holder.rl1.setVisibility(View.GONE);
-                holder.rl2.setVisibility(View.VISIBLE);
+                if (obj != null) {
+                    holder.tv3.setText((position + 1) + "." + "条码:" + obj.getString("条码"));
+                    holder.tv4.setText("产品号:" + obj.getString("产品号"));
+                    holder.tv5.setText("品名:" + obj.getString("品名"));
+                    holder.tv6.setText("规格:" + obj.getString("规格"));
+                    holder.rl1.setVisibility(View.GONE);
+                    holder.rl2.setVisibility(View.VISIBLE);
+                } else {
+                    holder.tv3.setText((position + 1) + "." + "条码:");
+                    holder.tv4.setText("产品号:");
+                    holder.tv5.setText("品名:");
+                    holder.tv6.setText("规格:");
+                    holder.rl1.setVisibility(View.GONE);
+                    holder.rl2.setVisibility(View.VISIBLE);
+                }
             } else {
                 holder.tv1.setText((position + 1) + ".");
                 holder.tv2.setText(CodeUtil.getDecodeStr(item));
@@ -69,7 +78,7 @@ public class RFIDAdapter extends RecyclerView.Adapter<RFIDAdapter.V> {
         } else {
             holder.tv1.setText("");
             holder.tv2.setText("");
-            holder.tv3.setText("条码:");
+            holder.tv3.setText((position + 1) + "." +"条码:");
             holder.tv4.setText("产品号:");
             holder.tv5.setText("品名:");
             holder.tv6.setText("规格:");

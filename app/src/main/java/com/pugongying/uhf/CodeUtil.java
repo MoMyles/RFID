@@ -1,5 +1,7 @@
 package com.pugongying.uhf;
 
+import android.util.Log;
+
 import com.uhf.uhf.Common.InventoryBuffer;
 
 public class CodeUtil {
@@ -34,7 +36,7 @@ public class CodeUtil {
             epc = map.strEPC.replace(" ", "");
             epc = CodeUtil.convertHexToString(epc);
         }
-        return epc;
+        return epc == null ? "" : epc.trim();
     }
 
 }

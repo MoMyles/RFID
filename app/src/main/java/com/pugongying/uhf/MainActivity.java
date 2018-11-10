@@ -94,20 +94,20 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                InitDevice();
-//                pd.dismiss();
-            }
-        }, 600);
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                InitDevice();
+////                pd.dismiss();
+//            }
+//        }, 600);
     }
 
 
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-        release();
+//        release();
     }
 
 
@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                                 @Override
                                 public void success(String data) {
                                     //[{"succ":"-1","msg":"只能在新制状态下修改"}]
+                                    //fastjson 
                                     JSONArray array = JSON.parseArray(data);
                                     if (array != null && array.size() > 0) {
                                         JSONObject obj = array.getJSONObject(0);
@@ -349,7 +350,7 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                                 try {
                                     for (int i = 0; i < size; i++) {
                                         JSONObject obj = array.getJSONObject(i);
-                                        if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码"))) {
+                                        if (CodeUtil.getDecodeStr(se.getMap()).equals(obj.getString("条码").trim())) {
                                             se.setObj(obj);
                                         }
                                     }
@@ -374,10 +375,10 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
 
-        pd = new ProgressDialog(MainActivity.this);
-        pd.setCanceledOnTouchOutside(false);
-        pd.setMessage("初始化中......");
-        pd.show();
+//        pd = new ProgressDialog(MainActivity.this);
+//        pd.setCanceledOnTouchOutside(false);
+//        pd.setMessage("初始化中......");
+//        pd.show();
 
     }
 
@@ -488,12 +489,13 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
      * @return
      */
     private boolean isExists(String message) {
+        if (message == null || "".equals(message)) return true;
         if (!lsTagList.isEmpty()) {
             Iterator<InventoryBuffer.InventoryTagMap> iterator = lsTagList.iterator();
             while (iterator.hasNext()) {
                 InventoryBuffer.InventoryTagMap ibitm = iterator.next();
 //                Log.e("TAG", CodeUtil.getDecodeStr(ibitm) + "-" + message);
-                if (CodeUtil.getDecodeStr(ibitm).equals(message)) {
+                if (CodeUtil.getDecodeStr(ibitm).equals(message.trim())) {
                     return true;
                 }
             }
@@ -580,6 +582,9 @@ public class MainActivity extends AppCompatActivity { // ActionBarActivity
                 lsTagList.remove(messageEvent.getData());
                 tagListSize = lsTagList.size();
                 tv_tags.setText("合计: " + tagListSize + " 个");
+                break;
+            case 0x36:
+                showlist();
                 break;
         }
     }

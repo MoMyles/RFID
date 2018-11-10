@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -134,6 +135,7 @@ public class IndexActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void failure() {
+                Log.e("TAG", "获取时间失败");
 
             }
         }).execute("GetDate");

@@ -95,20 +95,20 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
     @Override
     protected void onStart() {
         super.onStart();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                InitDevice();
-//                pd.dismiss();
-            }
-        }, 600);
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                InitDevice();
+////                pd.dismiss();
+//            }
+//        }, 600);
     }
 
 
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-        release();
+//        release();
     }
 
 
@@ -303,6 +303,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
             @SuppressWarnings("unused")
             @Override
             public void onClick(View arg0) {
+                KeyboardUtil.closeKeyboard(MoveActivity.this);
                 if (isRFID) {//1.如果是高频识别
                     isRFID = false;
                     btn_scan.setText("开启电子标签");
@@ -337,10 +338,10 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         IntentFilter intentFilter = new IntentFilter(SCN_CUST_ACTION_SCODE);
         registerReceiver(mSamDataReceiver, intentFilter);
 
-        pd = new ProgressDialog(MoveActivity.this);
-        pd.setCanceledOnTouchOutside(false);
-        pd.setMessage("初始化中......");
-        pd.show();
+//        pd = new ProgressDialog(MoveActivity.this);
+//        pd.setCanceledOnTouchOutside(false);
+//        pd.setMessage("初始化中......");
+//        pd.show();
     }
 
     private void doSearch() {
@@ -364,17 +365,18 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                 // ,"engCorpName":"SHAOXING GE","LoginKey":"F9A8926C7AA146BAA67EFE8BFE947941"}]
                 try {
                     JSONArray array = JSON.parseArray(data);
+                    // dataList.clear();
                     if (array != null && !array.isEmpty()) {
-                        dataList.clear();
                         for (int i = 0; i < array.size(); i++) {
-                            dataList.add(array.getJSONObject(i));
+                            dataList.add(0, array.getJSONObject(i));
                         }
-                        adapter.notifyDataSetChanged();
-
                     } else {
                         ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
                     }
+                    adapter.notifyDataSetChanged();
                 } catch (Exception e) {
+                    //dataList.clear();
+                    adapter.notifyDataSetChanged();
                     ToastUtils.show(getApplicationContext(), "未查询到符合条件的数据");
                 }
                 et_kw.setText("");
@@ -393,10 +395,10 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
         // 开启扫描
         try {
 
-            dataList.clear();
-            lsTagList.clear();
-            tagListSize = 0;
-            luanmaCount = 0;
+//            dataList.clear();
+//            lsTagList.clear();
+//            tagListSize = 0;
+//            luanmaCount = 0;
             Awl.WakeLock();
             Comm.startScan();
             isScaning = true;
@@ -562,6 +564,9 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                 lsTagList.remove(messageEvent.getData());
                 tagListSize = lsTagList.size();
                 break;
+            case 0x36:
+                showlist();
+                break;
         }
     }
 
@@ -633,6 +638,7 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        KeyboardUtil.closeKeyboard(MoveActivity.this);
         if (keyCode == KeyEvent.KEYCODE_BACK
                 && event.getAction() == KeyEvent.ACTION_DOWN) {
             if ((System.currentTimeMillis() - myapp.exittime) > 2000) {

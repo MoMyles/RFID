@@ -56,6 +56,7 @@ public class MenuActivity extends AppCompatActivity implements View.OnClickListe
                 ToastUtils.show(this, "暂未开放");
                 break;
             case R.id.btn3:
+                // 移位
                 intent = new Intent(this, MoveActivity.class);
                 break;
         }
