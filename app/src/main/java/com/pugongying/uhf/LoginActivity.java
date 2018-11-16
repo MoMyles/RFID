@@ -38,6 +38,8 @@ public class LoginActivity extends AppCompatActivity {
         et1 = findViewById(R.id.et1);
         et2 = findViewById(R.id.et2);
 
+        SharedPreferences sp = getSharedPreferences("pgy_rfid", MODE_PRIVATE);
+        et1.setText(sp.getString("UserCode", ""));
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
