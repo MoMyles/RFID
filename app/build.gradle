@@ -7,8 +7,8 @@ android {
         applicationId 'com.pugongying.uhf'
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 2
-        versionName '1.1.3'
+        versionCode 3
+        versionName '1.1.4'
         multiDexEnabled true
     }
     buildTypes {

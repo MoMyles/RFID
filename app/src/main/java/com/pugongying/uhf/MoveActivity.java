@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
@@ -232,6 +233,9 @@ public class MoveActivity extends AppCompatActivity { // ActionBarActivity
                             Map<String, Object> param = new HashMap<>();
                             param.put("positionNo", kw);
                             param.put("P_Code", getData());
+                            param.put("oldPosition", kw);
+                            SharedPreferences sp = getSharedPreferences("pgy_rfid", MODE_PRIVATE);
+                            param.put("userCode", sp.getString("UserCode", ""));
                             final LoadingDialog dialog = LoadingDialog.newInstance();
                             dialog.show(getSupportFragmentManager(), "save");
                             new NetUtil.NetTask().listen(new NetUtil.NetListener() {
